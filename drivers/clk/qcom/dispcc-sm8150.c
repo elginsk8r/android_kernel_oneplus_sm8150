@@ -48,7 +48,7 @@
 	.ib = _ib,				\
 }
 
-static DEFINE_VDD_REGULATORS(vdd_mm, VDD_MM_NUM, 1, vdd_corner);
+static DEFINE_VDD_REGULATORS(vdd_mm, VDD_NUM_MM, 1, vdd_corner);
 
 static struct msm_bus_vectors clk_debugfs_vectors[] = {
 	MSM_BUS_VECTOR(MSM_BUS_MASTER_AMPSS_M0,
@@ -253,14 +253,14 @@ static struct clk_alpha_pll disp_cc_pll0 = {
 	.offset = 0x0,
 	.vco_table = trion_vco,
 	.num_vco = ARRAY_SIZE(trion_vco),
-	.type = TRION_PLL,
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_TRION],
 	.config = &disp_cc_pll0_config,
 	.clkr = {
 		.hw.init = &(struct clk_init_data){
 			.name = "disp_cc_pll0",
 			.parent_names = (const char *[]){ "bi_tcxo" },
 			.num_parents = 1,
-			.ops = &clk_trion_pll_ops,
+			.ops = &clk_alpha_pll_trion_ops,
 			.vdd_class = &vdd_mm,
 			.num_rate_max = VDD_NUM,
 			.rate_max = (unsigned long[VDD_NUM]) {
@@ -301,14 +301,14 @@ static struct clk_alpha_pll disp_cc_pll1 = {
 	.offset = 0x1000,
 	.vco_table = trion_vco,
 	.num_vco = ARRAY_SIZE(trion_vco),
-	.type = TRION_PLL,
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_TRION],
 	.config = &disp_cc_pll1_config,
 	.clkr = {
 		.hw.init = &(struct clk_init_data){
 			.name = "disp_cc_pll1",
 			.parent_names = (const char *[]){ "bi_tcxo" },
 			.num_parents = 1,
-			.ops = &clk_trion_pll_ops,
+			.ops = &clk_alpha_pll_trion_ops,
 			.vdd_class = &vdd_mm,
 			.num_rate_max = VDD_NUM,
 			.rate_max = (unsigned long[VDD_NUM]) {
