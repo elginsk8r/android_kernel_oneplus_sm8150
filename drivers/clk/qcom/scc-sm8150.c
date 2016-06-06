@@ -104,14 +104,14 @@ static struct clk_alpha_pll scc_pll = {
 	.offset = 0x0,
 	.vco_table = trion_vco,
 	.num_vco = ARRAY_SIZE(trion_vco),
-	.type = TRION_PLL,
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_TRION],
 	.config = &scc_pll_config,
 	.clkr = {
 		.hw.init = &(struct clk_init_data){
 			.name = "scc_pll",
 			.parent_names = (const char *[]){ "bi_tcxo" },
 			.num_parents = 1,
-			.ops = &clk_trion_pll_ops,
+			.ops = &clk_alpha_pll_trion_ops,
 			.vdd_class = &vdd_scc_cx,
 			.num_rate_max = VDD_NUM,
 			.rate_max = (unsigned long[VDD_NUM]) {
@@ -133,6 +133,7 @@ static const struct clk_div_table post_div_table_trion_even[] = {
 
 static struct clk_alpha_pll_postdiv scc_pll_out_even = {
 	.offset = 0x0,
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_TRION],
 	.post_div_shift = 8,
 	.post_div_table = post_div_table_trion_even,
 	.num_post_div = ARRAY_SIZE(post_div_table_trion_even),
@@ -141,7 +142,7 @@ static struct clk_alpha_pll_postdiv scc_pll_out_even = {
 		.name = "scc_pll_out_even",
 		.parent_names = (const char *[]){ "scc_pll" },
 		.num_parents = 1,
-		.ops = &clk_trion_pll_postdiv_ops,
+		.ops = &clk_alpha_pll_postdiv_trion_ops,
 	},
 };
 
