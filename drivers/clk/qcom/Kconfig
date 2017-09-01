@@ -284,6 +284,15 @@ config MSM_CLK_AOP_QMP
 	subsystems via QMP mailboxes.
 	Say Y to support the clocks managed by AOP on platforms such as sdm845.
 
+config MSM_GCC_SM8150
+	tristate "SM8150 Global Clock Controller"
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the global clock controller on Qualcomm Technologies, Inc
+	  SM8150 devices.
+	  Say Y if you want to use peripheral devices such as UART, SPI, i2c,
+	  USB, UFS, SD/eMMC, PCIe, etc.
+
 config MSM_GCC_KONA
 	tristate "KONA Global Clock Controller"
 	depends on COMMON_CLK_QCOM
