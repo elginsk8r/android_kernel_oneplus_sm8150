@@ -293,6 +293,14 @@ config MSM_GCC_SM8150
 	  Say Y if you want to use peripheral devices such as UART, SPI, i2c,
 	  USB, UFS, SD/eMMC, PCIe, etc.
 
+config MSM_NPUCC_SM8150
+	tristate "SM8150 NPU Clock Controller"
+	depends on COMMON_CLK_QCOM
+	help
+          Support for the NPU clock controller on Qualcomm Technologies, Inc
+	  SM8150 devices.
+	  Say Y if you want to enable use of the Network Processing Unit.
+
 config MSM_GCC_KONA
 	tristate "KONA Global Clock Controller"
 	depends on COMMON_CLK_QCOM
