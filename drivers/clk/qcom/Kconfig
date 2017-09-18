@@ -310,6 +310,15 @@ config MSM_VIDEOCC_SM8150
 	  Say Y if you want to support video devices and functionality such as
 	  video encode/decode.
 
+config MSM_CAMCC_SM8150
+	tristate "SM8150 Camera Clock Controller"
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the camera clock controller on Qualcomm Technologies, Inc
+	  SM8150 devices.
+          Say Y if you want to support camera devices and functionality such as
+	  capturing pictures.
+
 config MSM_GCC_KONA
 	tristate "KONA Global Clock Controller"
 	depends on COMMON_CLK_QCOM
