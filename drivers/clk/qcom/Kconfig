@@ -301,6 +301,15 @@ config MSM_NPUCC_SM8150
 	  SM8150 devices.
 	  Say Y if you want to enable use of the Network Processing Unit.
 
+config MSM_VIDEOCC_SM8150
+	tristate "SM8150 Video Clock Controller"
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the video clock controller on Qualcomm Technologies, Inc.
+	  SM8150 devices.
+	  Say Y if you want to support video devices and functionality such as
+	  video encode/decode.
+
 config MSM_GCC_KONA
 	tristate "KONA Global Clock Controller"
 	depends on COMMON_CLK_QCOM
