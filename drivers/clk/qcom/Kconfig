@@ -649,6 +649,14 @@ config MSM_DEBUGCC_SM8150
 	  SM8150 devices.
 	  Say Y if you want to support the clock measurement functionality.
 
+config MSM_GPUCC_SM8150
+	tristate "SM8150 Graphics Clock Controller"
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the graphics clock controller on Qualcomm Technologies, Inc.
+	  sm8150 devices.
+	  Say Y if you want to support graphics controller devices.
+
 config SDM_GCC_429W
 	tristate "SDM429w Global Clock Controller"
 	depends on COMMON_CLK_QCOM
