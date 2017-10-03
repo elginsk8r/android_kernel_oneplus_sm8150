@@ -42,6 +42,7 @@ obj-$(CONFIG_MSM_GCC_8974) += gcc-msm8974.o
 obj-$(CONFIG_MSM_GCC_8994) += gcc-msm8994.o
 obj-$(CONFIG_MSM_GCC_8996) += gcc-msm8996.o
 obj-$(CONFIG_MSM_GCC_SM8150) += gcc-sm8150.o
+obj-$(CONFIG_MSM_GPUCC_SM8150) += gpucc-sm8150.o
 obj-$(CONFIG_MSM_LCC_8960) += lcc-msm8960.o
 obj-$(CONFIG_MSM_GCC_8998) += gcc-msm8998.o
 obj-$(CONFIG_MSM_GCC_KONA) += gcc-kona.o
