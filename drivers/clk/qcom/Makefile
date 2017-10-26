@@ -31,6 +31,7 @@ obj-$(CONFIG_MDM_GCC_9615) += gcc-mdm9615.o
 obj-$(CONFIG_MDM_LCC_9615) += lcc-mdm9615.o
 obj-$(CONFIG_MSM_CAMCC_SM8150) += camcc-sm8150.o
 obj-$(CONFIG_MSM_CLK_AOP_QMP) += clk-aop-qmp.o
+obj-$(CONFIG_MSM_DEBUGCC_SM8150) += debugcc-sm8150.o
 obj-$(CONFIG_MSM_DEBUGCC_KONA) += debugcc-kona.o
 obj-$(CONFIG_MSM_DISPCC_SM8150) += dispcc-sm8150.o
 obj-$(CONFIG_MSM_DISPCC_KONA) += dispcc-kona.o
