@@ -58,6 +58,7 @@ struct pll_vco {
 /**
  * struct clk_alpha_pll - phase locked loop (PLL)
  * @offset: base address of registers
+ * @inited: flag that's set when the PLL is initialized
  * @soft_vote: soft voting variable for multiple PLL software instances
  * @soft_vote_mask: soft voting mask for multiple PLL software instances
  * @vco_table: array of VCO settings
@@ -69,6 +70,7 @@ struct clk_alpha_pll {
 	u32 offset;
 	const u8 *regs;
 	struct alpha_pll_config *config;
+	bool inited;
 
 	u32 *soft_vote;
 	u32 soft_vote_mask;

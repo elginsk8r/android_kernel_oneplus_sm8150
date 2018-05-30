@@ -2822,8 +2822,13 @@ int clk_trion_pll_configure(struct clk_alpha_pll *pll, struct regmap *regmap,
 		return -EINVAL;
 	}
 
+	if (pll->inited) {
+		return 0;
+	}
+
 	if (trion_pll_is_enabled(pll, regmap)) {
 		pr_warn("PLL is already enabled. Skipping configuration.\n");
+		pll->inited = true;
 		return 0;
 	}
 
@@ -2888,6 +2893,8 @@ int clk_trion_pll_configure(struct clk_alpha_pll *pll, struct regmap *regmap,
 	/* Place the PLL in STANDBY mode */
 	ret = regmap_update_bits(regmap, PLL_MODE(pll), PLL_RESET_N,
 							PLL_RESET_N);
+
+	pll->inited = true;
 	return ret;
 }
 EXPORT_SYMBOL(clk_trion_pll_configure);
@@ -2999,7 +3006,10 @@ static int clk_trion_pll_set_rate(struct clk_hw *hw, unsigned long rate,
 		return ret;
 
 	/* PLL has lost it's L or CAL value, needs reconfiguration */
-	if (!l || !cal_val) {
+	if (!l || !cal_val)
+		pll->inited = false;
+
+	if (unlikely(!pll->inited)) {
 		ret = clk_trion_pll_configure(pll, pll->clkr.regmap,
 						pll->config);
 		if (ret) {
@@ -3225,12 +3235,17 @@ int clk_regera_pll_configure(struct clk_alpha_pll *pll, struct regmap *regmap,
 		return -EINVAL;
 	}
 
+	if (pll->inited) {
+		return 0;
+	}
+
 	ret = regmap_read(regmap, PLL_MODE(pll), &mode_regval);
 	if (ret)
 		return ret;
 
 	if (mode_regval & PLL_LOCK_DET) {
 		pr_warn("PLL is already enabled. Skipping configuration.\n");
+		pll->inited = true;
 		return 0;
 	}
 
@@ -3269,6 +3284,7 @@ int clk_regera_pll_configure(struct clk_alpha_pll *pll, struct regmap *regmap,
 	/* Set operation mode to OFF */
 	regmap_write(regmap, PLL_OPMODE(pll), PLL_OPMODE_STANDBY);
 
+	pll->inited = true;
 	return 0;
 }
 EXPORT_SYMBOL(clk_regera_pll_configure);
@@ -3296,7 +3312,10 @@ static int clk_regera_pll_enable(struct clk_hw *hw)
 		return ret;
 
 	/* PLL has lost it's L value, needs reconfiguration */
-	if (!l_val) {
+	if (!l_val)
+		pll->inited = false;
+
+	if (unlikely(!pll->inited)) {
 		ret = clk_regera_pll_configure(pll, pll->clkr.regmap,
 						pll->config);
 		if (ret) {
@@ -3399,7 +3418,10 @@ static int clk_regera_pll_set_rate(struct clk_hw *hw, unsigned long rate,
 		return ret;
 
 	/* PLL has lost it's L value, needs reconfiguration */
-	if (!l) {
+	if (!l)
+		pll->inited = false;
+
+	if (unlikely(!pll->inited)) {
 		ret = clk_regera_pll_configure(pll, pll->clkr.regmap,
 						pll->config);
 		if (ret) {
