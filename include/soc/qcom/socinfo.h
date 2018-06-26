@@ -107,10 +107,10 @@ enum socinfo_parttype {
 	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,msm8996")
 #define early_machine_is_msm8996_auto()	\
 	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,msm8996-cdp")
-#define early_machine_is_sm8150()	\
-	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,sm8150")
-#define early_machine_is_sa8150()	\
-	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,sa8150")
+#define early_machine_is_sa8155()	\
+	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,sa8155")
+#define early_machine_is_sa8155p()	\
+	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,sa8155p")
 #define early_machine_is_sa8150p()	\
 	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,sa8150p")
 #define early_machine_is_kona()	\
@@ -192,8 +192,8 @@ enum socinfo_parttype {
 #define early_machine_is_apq8084()	0
 #define early_machine_is_msm8996()	0
 #define early_machine_is_sm8150()	0
-#define early_machine_is_sa8150()	0
-#define early_machine_is_sa8150p()	0
+#define early_machine_is_sa8155()	0
+#define early_machine_is_sa8155p()	0
 #define early_machine_is_kona()		0
 #define early_machine_is_lito()		0
 #define early_machine_is_orchid()	0
@@ -245,8 +245,8 @@ enum msm_cpu {
 	MSM_CPU_8996,
 	MSM_CPU_SDM660,
 	MSM_CPU_SM8150,
-	MSM_CPU_SA8150,
-	MSM_CPU_SA8150P,
+	MSM_CPU_SA8155,
+	MSM_CPU_SA8155P,
 	MSM_CPU_KONA,
 	MSM_CPU_KONA_IOT,
 	MSM_CPU_LITO,
