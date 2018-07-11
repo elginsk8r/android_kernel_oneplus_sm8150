@@ -51,6 +51,7 @@ obj-$(CONFIG_MSM_MMCC_8960) += mmcc-msm8960.o
 obj-$(CONFIG_MSM_MMCC_8974) += mmcc-msm8974.o
 obj-$(CONFIG_MSM_MMCC_8996) += mmcc-msm8996.o
 obj-$(CONFIG_MSM_NPUCC_SM8150) += npucc-sm8150.o
+obj-$(CONFIG_MSM_SCC_SM8150) += scc-sm8150.o
 obj-$(CONFIG_MSM_VIDEOCC_SM8150) += videocc-sm8150.o
 obj-$(CONFIG_MSM_NPUCC_KONA) += npucc-kona.o
 obj-$(CONFIG_MSM_VIDEOCC_KONA) += videocc-kona.o
