@@ -7,12 +7,7 @@
 
 /* sm8150.dtsi */
 &android_q_fstab {
-	odm {
-		status = "disabled";
-	};
-	vendor {
-		dev = "/dev/block/platform/soc/1d84000.sdhci/by-name/vendor";
-	};
+	status = "disabled";
 };
 
 &pil_adsp_mem {
