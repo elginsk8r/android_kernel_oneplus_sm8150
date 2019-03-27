@@ -2406,6 +2406,16 @@ static int dsi_panel_parse_bl_config(struct dsi_panel *panel)
 		panel->bl_config.brightness_max_level = val;
 	}
 
+	rc = utils->read_u32(utils->data,
+			"qcom,mdss-dsi-bl-default-level", &val);
+	if (rc) {
+		panel->bl_config.brightness_default_level =
+			panel->bl_config.brightness_max_level;
+		DSI_DEBUG("set default brightness to max level\n");
+	} else {
+		panel->bl_config.brightness_default_level = val;
+	}
+
 	rc = utils->read_u32(utils->data, "qcom,mdss-dsi-bl-ctrl-dcs-subtype",
 		&val);
 	if (rc) {
