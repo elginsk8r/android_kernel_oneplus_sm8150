@@ -157,6 +157,10 @@ struct msm_pinctrl_soc_data {
 	unsigned int nqup_regs;
 	const int *reserved_gpios;
 	struct msm_dir_conn *dir_conn;
+#ifdef CONFIG_HIBERNATION
+	u32 *dir_conn_addr;
+	u32 tile_count;
+#endif
 };
 
 int msm_pinctrl_probe(struct platform_device *pdev,
