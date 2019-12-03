@@ -51,6 +51,11 @@ struct clk_dummy {
 	unsigned long rrate;
 };
 
+struct qcom_cc_critical_desc {
+	struct clk_regmap **clks;
+	size_t num_clks;
+};
+
 extern const struct freq_tbl *qcom_find_freq(const struct freq_tbl *f,
 					     unsigned long rate);
 extern const struct freq_tbl *qcom_find_freq_floor(const struct freq_tbl *f,
@@ -73,6 +78,8 @@ extern int qcom_cc_really_probe(struct platform_device *pdev,
 				struct regmap *regmap);
 extern int qcom_cc_probe(struct platform_device *pdev,
 			 const struct qcom_cc_desc *desc);
+extern int qcom_cc_enable_critical_clks(
+		const struct qcom_cc_critical_desc *desc);
 extern const struct clk_ops clk_dummy_ops;
 
 extern void clk_debug_print_hw(struct clk_core *clk, struct seq_file *f);
