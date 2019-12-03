@@ -334,4 +334,23 @@ int qcom_cc_probe(struct platform_device *pdev, const struct qcom_cc_desc *desc)
 }
 EXPORT_SYMBOL_GPL(qcom_cc_probe);
 
+int qcom_cc_enable_critical_clks(const struct qcom_cc_critical_desc *desc)
+{
+	struct clk_regmap **clkr = desc->clks;
+	size_t num_clks = desc->num_clks;
+	int i, ret = 0;
+
+	for (i = 0; i < num_clks; i++) {
+		ret = clk_enable_regmap(&(clkr[i]->hw));
+		if (ret) {
+			pr_err("Failed to enable %s\n",
+					clk_hw_get_name(&(clkr[i]->hw)));
+			break;
+		}
+	}
+
+	return ret;
+}
+EXPORT_SYMBOL(qcom_cc_enable_critical_clks);
+
 MODULE_LICENSE("GPL v2");
