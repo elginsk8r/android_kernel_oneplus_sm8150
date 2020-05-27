@@ -1610,6 +1610,11 @@
 		clock-names = "xo", "alternate";
 
 		#freq-domain-cells = <2>;
+
+		cpu7_notify: cpu7-notify {
+			qcom,cooling-cpu = <&CPU7>;
+			#cooling-cells = <2>;
+		};
 	};
 
 	spmi_bus: qcom,spmi@c440000 {
