@@ -377,6 +377,7 @@ fail:
 }
 
 static const struct of_device_id aop_qmp_clk_of_match[] = {
+	{ .compatible = "qcom,aop-qmp-clk-v1" },
 	{ .compatible = "qcom,aop-qmp-clk", },
 	{ .compatible = "qcom,aop-qmp-clk-v1" },
 	{}
