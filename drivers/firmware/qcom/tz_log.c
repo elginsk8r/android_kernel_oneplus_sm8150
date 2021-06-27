@@ -29,6 +29,7 @@
 
 #include <soc/qcom/scm.h>
 #include <soc/qcom/qseecomi.h>
+#include <linux/proc_fs.h>
 
 /* QSEE_LOG_BUF_SIZE = 32K */
 #define QSEE_LOG_BUF_SIZE 0x8000
@@ -68,6 +69,11 @@
 #define TZBSP_AES_256_ENCRYPTED_KEY_SIZE 256
 #define TZBSP_NONCE_LEN 12
 #define TZBSP_TAG_LEN 16
+
+/*
+ * Directory for TZ DBG logs
+ */
+#define TZDBG_DIR_NAME "tzdbg"
 
 /*
  * VMID Table
@@ -804,23 +810,31 @@ static int _disp_hyp_general_stats(size_t count)
 	return len;
 }
 
-static ssize_t tzdbgfs_read(struct file *file, char __user *buf,
+static ssize_t tzdbg_fs_read(struct file *file, char __user *buf,
 	size_t count, loff_t *offp)
 {
+	struct seq_file *seq = file->private_data;
+	int tz_id = TZDBG_STATS_MAX;
 	int len = 0;
-	int *tz_id =  file->private_data;
 
-	if (*tz_id == TZDBG_BOOT || *tz_id == TZDBG_RESET ||
-		*tz_id == TZDBG_INTERRUPT || *tz_id == TZDBG_GENERAL ||
-		*tz_id == TZDBG_VMID || *tz_id == TZDBG_LOG)
+	if (seq)
+		tz_id = *(int *)(seq->private);
+	else {
+		pr_err("%s: Seq data null unable to proceed\n", __func__);
+		return 0;
+	}
+
+	if (tz_id == TZDBG_BOOT || tz_id == TZDBG_RESET ||
+		tz_id == TZDBG_INTERRUPT || tz_id == TZDBG_GENERAL ||
+		tz_id == TZDBG_VMID || tz_id == TZDBG_LOG)
 		memcpy_fromio((void *)tzdbg.diag_buf, tzdbg.virt_iobase,
 						debug_rw_buf_size);
 
-	if (*tz_id == TZDBG_HYP_GENERAL || *tz_id == TZDBG_HYP_LOG)
+	if (tz_id == TZDBG_HYP_GENERAL || tz_id == TZDBG_HYP_LOG)
 		memcpy_fromio((void *)tzdbg.hyp_diag_buf, tzdbg.hyp_virt_iobase,
 					tzdbg.hyp_debug_rw_buf_size);
 
-	switch (*tz_id) {
+	switch (tz_id) {
 	case TZDBG_BOOT:
 		len = _disp_tz_boot_stats();
 		break;
@@ -864,21 +878,25 @@ static ssize_t tzdbgfs_read(struct file *file, char __user *buf,
 		len = count;
 
 	return simple_read_from_buffer(buf, len, offp,
-				tzdbg.stat[(*tz_id)].data, len);
+				tzdbg.stat[(tz_id)].data, len);
 }
 
-static int tzdbgfs_open(struct inode *inode, struct file *pfile)
+static int tzdbg_procfs_open(struct inode *inode, struct file *file)
 {
-	pfile->private_data = inode->i_private;
-	return 0;
+	return single_open(file, NULL, PDE_DATA(inode));
+}
+
+static int tzdbg_procfs_release(struct inode *inode, struct file *file)
+{
+	return single_release(inode, file);
 }
 
 const struct file_operations tzdbg_fops = {
 	.owner   = THIS_MODULE,
-	.read    = tzdbgfs_read,
-	.open    = tzdbgfs_open,
+	.read    = tzdbg_fs_read,
+	.open    = tzdbg_procfs_open,
+	.release = tzdbg_procfs_release,
 };
-
 
 /*
  * Allocates log buffer from ION, registers the buffer at TZ
@@ -939,26 +957,26 @@ err:
 	return;
 }
 
-static int  tzdbgfs_init(struct platform_device *pdev)
+static int tzdbg_fs_init(struct platform_device *pdev)
 {
 	int rc = 0;
 	int i;
-	struct dentry           *dent_dir;
-	struct dentry           *dent;
+	struct proc_dir_entry *dent_dir;
+	struct proc_dir_entry *dent;
 
-	dent_dir = debugfs_create_dir("tzdbg", NULL);
+	dent_dir = proc_mkdir(TZDBG_DIR_NAME, NULL);
 	if (dent_dir == NULL) {
-		dev_err(&pdev->dev, "tzdbg debugfs_create_dir failed\n");
+		dev_err(&pdev->dev, "tzdbg proc_mkdir failed\n");
 		return -ENOMEM;
 	}
 
 	for (i = 0; i < TZDBG_STATS_MAX; i++) {
 		tzdbg.debug_tz[i] = i;
-		dent = debugfs_create_file_unsafe(tzdbg.stat[i].name,
+		dent = proc_create_data(tzdbg.stat[i].name,
 				0444, dent_dir,
-				&tzdbg.debug_tz[i], &tzdbg_fops);
+				&tzdbg_fops, &tzdbg.debug_tz[i]);
 		if (dent == NULL) {
-			dev_err(&pdev->dev, "TZ debugfs_create_file failed\n");
+			dev_err(&pdev->dev, "TZ proc_create_data failed\n");
 			rc = -ENOMEM;
 			goto err;
 		}
@@ -970,18 +988,19 @@ static int  tzdbgfs_init(struct platform_device *pdev)
 	platform_set_drvdata(pdev, dent_dir);
 	return 0;
 err:
-	debugfs_remove_recursive(dent_dir);
+	remove_proc_entry(TZDBG_DIR_NAME, NULL);
 
 	return rc;
 }
 
-static void tzdbgfs_exit(struct platform_device *pdev)
+static void tzdbg_fs_exit(struct platform_device *pdev)
 {
-	struct dentry           *dent_dir;
+	struct proc_dir_entry *dent_dir;
 
 	kzfree(tzdbg.disp_buf);
 	dent_dir = platform_get_drvdata(pdev);
-	debugfs_remove_recursive(dent_dir);
+	if (dent_dir)
+		remove_proc_entry(TZDBG_DIR_NAME, NULL);
 	if (g_qsee_log)
 		dma_free_coherent(&pdev->dev, QSEE_LOG_BUF_SIZE,
 					 (void *)g_qsee_log, coh_pmem);
@@ -1138,7 +1157,7 @@ static int tz_log_probe(struct platform_device *pdev)
 
 	tzdbg.diag_buf = (struct tzdbg_t *)ptr;
 
-	if (tzdbgfs_init(pdev))
+	if (tzdbg_fs_init(pdev))
 		goto err;
 
 	tzdbg_register_qsee_log_buf(pdev);
@@ -1156,7 +1175,7 @@ static int tz_log_remove(struct platform_device *pdev)
 	kzfree(tzdbg.diag_buf);
 	if (tzdbg.hyp_diag_buf)
 		kzfree(tzdbg.hyp_diag_buf);
-	tzdbgfs_exit(pdev);
+	tzdbg_fs_exit(pdev);
 
 	return 0;
 }
