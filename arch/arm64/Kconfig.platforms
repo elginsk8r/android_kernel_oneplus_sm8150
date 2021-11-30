@@ -151,6 +151,9 @@ config ARCH_QCOM
 	help
 	  This enables support for the ARMv8 based Qualcomm chipsets.
 
+config QCOM_MAINLINE_DTB
+	bool
+
 config ARCH_KONA
 	bool "Enable Support for Qualcomm Technologies, Inc. KONA"
 	depends on ARCH_QCOM
@@ -236,8 +239,19 @@ config ARCH_SDM845
 	select COMMON_CLK
 	select COMMON_CLK_QCOM
 	select QCOM_GDSC
+	select QCOM_MAINLINE_DTB
 	help
 	  This enables support for the SDM845 chipset. If you do not
+	  wish to build a kernel that runs on this chipset, say 'N' here.
+
+config ARCH_SM8150
+	bool "Enable Support for Qualcomm Technologies, Inc. SM8150"
+	depends on ARCH_QCOM
+	select COMMON_CLK
+	select COMMON_CLK_QCOM
+	select QCOM_MAINLINE_DTB
+	help
+	  This enables support for the SM8150 chipset. If you do not
 	  wish to build a kernel that runs on this chipset, say 'N' here.
 
 config ARCH_REALTEK
