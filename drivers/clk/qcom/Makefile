@@ -38,6 +38,7 @@ obj-$(CONFIG_SM_DISPCC_TRINKET) += dispcc-trinket.o
 obj-$(CONFIG_SM_GCC_TRINKET) += gcc-trinket.o
 obj-$(CONFIG_SM_GPUCC_TRINKET) += gpucc-trinket.o
 obj-$(CONFIG_SM_VIDEOCC_TRINKET) += videocc-trinket.o
+obj-$(CONFIG_CLOCK_CPU_OSM) += clk-cpu-osm.o
 
 # Keep alphabetically sorted by config
 obj-$(CONFIG_APQ_GCC_8084) += gcc-apq8084.o
