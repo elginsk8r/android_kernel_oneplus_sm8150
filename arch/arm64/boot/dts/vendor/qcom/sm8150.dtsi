@@ -79,6 +79,7 @@
 			next-level-cache = <&L2_0>;
 			qcom,lmh-dcvs = <&lmh_dcvs0>;
 			#cooling-cells = <2>;
+			qcom,freq-domain = <&cpufreq_hw 0 4>;
 			L2_0: l2-cache {
 			      compatible = "arm,arch-cache";
 			      cache-level = <2>;
@@ -114,6 +115,7 @@
 			next-level-cache = <&L2_1>;
 			qcom,lmh-dcvs = <&lmh_dcvs0>;
 			#cooling-cells = <2>;
+			qcom,freq-domain = <&cpufreq_hw 0 4>;
 			L2_1: l2-cache {
 			      compatible = "arm,arch-cache";
 			      cache-level = <2>;
@@ -144,6 +146,7 @@
 			next-level-cache = <&L2_2>;
 			qcom,lmh-dcvs = <&lmh_dcvs0>;
 			#cooling-cells = <2>;
+			qcom,freq-domain = <&cpufreq_hw 0 4>;
 			L2_2: l2-cache {
 			      compatible = "arm,arch-cache";
 			      cache-level = <2>;
@@ -174,6 +177,7 @@
 			next-level-cache = <&L2_3>;
 			qcom,lmh-dcvs = <&lmh_dcvs0>;
 			#cooling-cells = <2>;
+			qcom,freq-domain = <&cpufreq_hw 0 4>;
 			L2_3: l2-cache {
 			      compatible = "arm,arch-cache";
 			      cache-level = <2>;
@@ -204,6 +208,7 @@
 			next-level-cache = <&L2_4>;
 			qcom,lmh-dcvs = <&lmh_dcvs1>;
 			#cooling-cells = <2>;
+			qcom,freq-domain = <&cpufreq_hw 1 4>;
 			L2_4: l2-cache {
 			      compatible = "arm,arch-cache";
 			      cache-level = <2>;
@@ -243,6 +248,7 @@
 			next-level-cache = <&L2_5>;
 			qcom,lmh-dcvs = <&lmh_dcvs1>;
 			#cooling-cells = <2>;
+			qcom,freq-domain = <&cpufreq_hw 1 4>;
 			L2_5: l2-cache {
 			      compatible = "arm,arch-cache";
 			      cache-level = <2>;
@@ -282,6 +288,7 @@
 			next-level-cache = <&L2_6>;
 			qcom,lmh-dcvs = <&lmh_dcvs1>;
 			#cooling-cells = <2>;
+			qcom,freq-domain = <&cpufreq_hw 1 4>;
 			L2_6: l2-cache {
 			      compatible = "arm,arch-cache";
 			      cache-level = <2>;
@@ -321,6 +328,7 @@
 			next-level-cache = <&L2_7>;
 			qcom,lmh-dcvs = <&lmh_dcvs1>;
 			#cooling-cells = <2>;
+			qcom,freq-domain = <&cpufreq_hw 2 4>;
 			L2_7: l2-cache {
 			      compatible = "arm,arch-cache";
 			      cache-level = <2>;
@@ -1445,6 +1453,19 @@
 		pinctrl-0 = <&qcom_clk_led_gp2_active>;
 		pinctrl-1 = <&qcom_clk_led_gp2_sleep>;
 		status = "disabled";
+	};
+
+	cpufreq_hw: qcom,cpufreq-hw {
+		compatible = "qcom,cpufreq-hw-epss";
+		reg = <0x18323000 0x1400>, <0x18325800 0x1400>,
+		      <0x18327800 0x1400>;
+		reg-names = "freq-domain0", "freq-domain1",
+				"freq-domain2";
+
+		clocks = <&clock_rpmh RPMH_CXO_CLK>, <&clock_gcc GPLL0>;
+		clock-names = "xo", "alternate";
+
+		#freq-domain-cells = <2>;
 	};
 
 	spmi_bus: qcom,spmi@c440000 {
