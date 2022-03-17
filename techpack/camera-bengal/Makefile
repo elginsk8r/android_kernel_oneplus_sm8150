@@ -9,6 +9,10 @@ ifeq ($(CONFIG_ARCH_KHAJE), y)
 include $(srctree)/techpack/camera-bengal/config/khajecamera.conf
 endif
 
+ifeq ($(CONFIG_ARCH_SM8150), y)
+include $(srctree)/techpack/camera-bengal/config/sm8150camera.conf
+endif
+
 ifeq ($(CONFIG_ARCH_BENGAL), y)
 LINUXINCLUDE    += \
 		-include $(srctree)/techpack/camera-bengal/config/bengalcameraconf.h
@@ -17,6 +21,11 @@ endif
 ifeq ($(CONFIG_ARCH_KHAJE), y)
 LINUXINCLUDE    += \
 		-include $(srctree)/techpack/camera-bengal/config/khajecameraconf.h
+endif
+
+ifeq ($(CONFIG_ARCH_SM8150), y)
+LINUXINCLUDE    += \
+		-include $(srctree)/techpack/camera-bengal/config/sm8150cameraconf.h
 endif
 
 ifdef CONFIG_SPECTRA_CAMERA_BENGAL
