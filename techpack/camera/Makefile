@@ -1,12 +1,21 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 # auto-detect subdirs
+ifeq ($(CONFIG_ARCH_SM8150), y)
+include $(srctree)/techpack/camera/config/sm8150camera.conf
+endif
+
 ifeq ($(CONFIG_ARCH_KONA), y)
 include $(srctree)/techpack/camera/config/konacamera.conf
 endif
 
 ifeq ($(CONFIG_ARCH_LITO), y)
 include $(srctree)/techpack/camera/config/litocamera.conf
+endif
+
+ifeq ($(CONFIG_ARCH_SM8150), y)
+LINUXINCLUDE    += \
+		-include $(srctree)/techpack/camera/config/sm8150cameraconf.h
 endif
 
 ifeq ($(CONFIG_ARCH_KONA), y)
