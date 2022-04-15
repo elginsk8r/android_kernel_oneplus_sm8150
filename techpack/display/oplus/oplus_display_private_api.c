@@ -25,6 +25,9 @@
 #include <linux/msm_drm_notify.h>
 #include <soc/oplus/device_info.h>
 #include "dsi_pwr.h"
+#ifdef CONFIG_OPLUS_FINGERPRINT
+#include "oplus_fp_common.h"
+#endif
 
 extern int hbm_mode;
 int lcd_closebl_flag = 0;
@@ -72,6 +75,10 @@ extern int aod_light_mode;
 int osc_count;
 int osc_clock_mode = 0;
 extern enum oplus_display_support_list oplus_display_vendor;
+
+#ifdef CONFIG_OPLUS_FINGERPRINT
+struct fp_underscreen_info fp_state = {0};
+#endif
 
 #define PANEL_TX_MAX_BUF 256
 #define PANEL_CMD_MIN_TX_COUNT 2
@@ -2629,6 +2636,14 @@ static ssize_t oplus_display_set_panel_pwr(struct device *dev,
 	return count;
 }
 
+#ifdef CONFIG_OPLUS_FINGERPRINT
+static ssize_t oplus_display_get_fp_state(struct device *obj,
+	struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d,%d,%d\n", fp_state.x, fp_state.y, fp_state.touch_state);
+}
+#endif
+
 static struct kobject *oplus_display_kobj;
 
 static DEVICE_ATTR(hbm, S_IRUGO | S_IWUSR, oplus_display_get_hbm,
@@ -2692,6 +2707,9 @@ static DEVICE_ATTR(panel_pwr, S_IRUGO | S_IWUSR, oplus_display_get_panel_pwr,
 static DEVICE_ATTR(mipi_clk_rate_hz, S_IRUGO|S_IWUSR, oplus_display_get_mipi_clk_rate_hz, NULL);
 static DEVICE_ATTR(osc_clock, S_IRUGO|S_IWUSR, oplus_display_get_osc_clk,
 	oplus_display_set_osc_clk);
+#ifdef CONFIG_OPLUS_FINGERPRINT
+static DEVICE_ATTR(fp_state, S_IRUGO, oplus_display_get_fp_state, NULL);
+#endif
 
 /*
  * Create a group of attributes so that we can create and destroy them all
@@ -2730,6 +2748,9 @@ static struct attribute *oplus_display_attrs[] = {
 	&dev_attr_panel_pwr.attr,
 	&dev_attr_mipi_clk_rate_hz.attr,
 	&dev_attr_osc_clock.attr,
+#ifdef CONFIG_OPLUS_FINGERPRINT
+	&dev_attr_fp_state.attr,
+#endif
 	NULL,	/* need to NULL terminate the list of attributes */
 };
 
@@ -2752,6 +2773,16 @@ int oplus_display_get_resolution(unsigned int *xres, unsigned int *yres)
 	return 0;
 }
 EXPORT_SYMBOL(oplus_display_get_resolution);
+
+#ifdef CONFIG_OPLUS_FINGERPRINT
+static int oplus_opticalfp_irq_handler(struct fp_underscreen_info *tp_info) {
+	fp_state.x = tp_info->x;
+	fp_state.y = tp_info->y;
+	fp_state.touch_state = tp_info->touch_state;
+	sysfs_notify(kernel_kobj, "oplus_display", dev_attr_fp_state.attr.name);
+	return IRQ_HANDLED;
+}
+#endif
 
 static int __init oplus_display_private_api_init(void)
 {
@@ -2786,7 +2817,9 @@ static int __init oplus_display_private_api_init(void)
 		pr_err("fail to init oplus_ffl_thread\n");
 	}
 
-
+#ifdef CONFIG_OPLUS_FINGERPRINT
+	opticalfp_irq_handler_register(oplus_opticalfp_irq_handler);
+#endif
 
 	return 0;
 
