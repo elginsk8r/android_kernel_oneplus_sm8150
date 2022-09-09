@@ -1,0 +1,2 @@
+obj-$(CONFIG_OPLUS_SYSTEM_KERNEL) += system/ sensor/
+
