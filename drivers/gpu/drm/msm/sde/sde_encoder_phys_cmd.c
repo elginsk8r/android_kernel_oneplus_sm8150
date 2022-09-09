@@ -34,6 +34,12 @@
 
 #define PP_TIMEOUT_MAX_TRIALS	4
 
+#ifdef OPLUS_BUG_STABILITY
+#define PP_TIMEOUT_BAD_TRIALS   10
+#include "oplus_mm_kevent_fb.h"
+extern int oplus_dimlayer_fingerprint_failcount;
+#endif /*OPLUS_BUG_STABILITY */
+
 /*
  * Tearcheck sync start and continue thresholds are empirically found
  * based on common panels In the future, may want to allow panels to override
@@ -289,6 +295,8 @@ static void sde_encoder_phys_cmd_te_rd_ptr_irq(void *arg, int irq_idx)
 	SDE_EVT32_IRQ(DRMID(phys_enc->parent),
 			phys_enc->hw_pp->idx - PINGPONG_0,
 			phys_enc->hw_intf->idx - INTF_0,
+			cmd_enc->pending_rd_ptr_cnt,
+			phys_enc->pending_retire_fence_cnt,
 			event, 0xfff);
 
 	if (phys_enc->parent_ops.handle_vblank_virt)
@@ -545,6 +553,11 @@ static int _sde_encoder_phys_cmd_handle_ppdone_timeout(
 
 	conn = phys_enc->connector;
 	sde_conn = to_sde_connector(conn);
+#ifdef OPLUS_BUG_STABILITY
+	if (cmd_enc->pp_timeout_report_cnt >= PP_TIMEOUT_BAD_TRIALS)
+		return -EFAULT;
+#endif /* OPLUS_BUG_STABILITY */
+
 	cmd_enc->pp_timeout_report_cnt++;
 	pending_kickoff_cnt = atomic_read(&phys_enc->pending_kickoff_cnt);
 
@@ -599,6 +612,14 @@ static int _sde_encoder_phys_cmd_handle_ppdone_timeout(
 		sde_connector_event_notify(conn, DRM_EVENT_SDE_HW_RECOVERY,
 				sizeof(uint8_t), event);
 	} else if (cmd_enc->pp_timeout_report_cnt) {
+		#ifndef OPLUS_BUG_STABILITY
+		{
+			unsigned char payload[150] = "";
+			scnprintf(payload, sizeof(payload), "NULL$$EventID@@%d$$wr_ptr_irq_timeout@@%d",
+					 OPLUS_MM_DIRVER_FB_EVENT_ID_ESD, oplus_dimlayer_fingerprint_failcount);
+			upload_mm_kevent_fb_data(OPLUS_MM_DIRVER_FB_EVENT_MODULE_DISPLAY,payload);
+		}
+		#endif /* OPLUS_BUG_STABILITY */
 		SDE_DBG_DUMP("dsi_dbg_bus", "panic");
 	}
 
