@@ -759,6 +759,17 @@ static int msm_restart_probe(struct platform_device *pdev)
 	struct device_node *np;
 	int ret = 0;
 
+#ifdef CONFIG_OPLUS_FEATURE_QCOM_MINIDUMP_ENHANCE
+#ifdef CONFIG_OPLUS_USER_BUILD
+	if (get_eng_version() == AGING)
+		dload_type = SCM_DLOAD_FULLDUMP;
+	else
+		dload_type = SCM_DLOAD_MINIDUMP;
+#else
+		dload_type = SCM_DLOAD_FULLDUMP;
+#endif
+#endif
+
 	setup_dload_mode_support();
 
 	np = of_find_compatible_node(NULL, NULL,

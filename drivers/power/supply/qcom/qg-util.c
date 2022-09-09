@@ -360,11 +360,24 @@ int qg_write_monotonic_soc(struct qpnp_qg *chip, int msoc)
 	return rc;
 }
 
+#ifdef VENDOR_EDIT
+int g_oplus_qg_ibta;
+extern bool is_batt_id_valid(struct qpnp_qg *chip);
+#endif
+
 int qg_get_battery_temp(struct qpnp_qg *chip, int *temp)
 {
 	int rc = 0;
 
 	if (chip->battery_missing) {
+		*temp = 250;
+		if (!is_batt_id_valid(chip)) {
+			*temp = -400;
+		}
+		return 0;
+	}
+
+	if (chip->batt_therm_chan == NULL) {
 		*temp = 250;
 		return 0;
 	}
@@ -375,6 +388,7 @@ int qg_get_battery_temp(struct qpnp_qg *chip, int *temp)
 		return rc;
 	}
 	pr_debug("batt_temp = %d\n", *temp);
+	*temp = (*temp) / 100;
 
 	return 0;
 }
@@ -411,6 +425,7 @@ int qg_get_battery_current(struct qpnp_qg *chip, int *ibat_ua)
 
 	last_ibat = sign_extend32(last_ibat, 15);
 	*ibat_ua = qg_iraw_to_ua(chip, last_ibat);
+	g_oplus_qg_ibta = *ibat_ua / 1000;
 
 release:
 	/* release */

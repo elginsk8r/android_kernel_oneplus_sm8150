@@ -15,7 +15,9 @@
 #include <linux/of_irq.h>
 #include <linux/printk.h>
 #include <linux/pmic-voter.h>
+#ifndef CONFIG_OPLUS_SM8150R_CHARGER
 #include "smb5-lib.h"
+#endif
 #include "schgm-flash.h"
 
 #define IS_BETWEEN(left, right, value) \

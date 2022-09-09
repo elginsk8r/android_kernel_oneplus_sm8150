@@ -631,6 +631,20 @@ config KINECTICS_XR_NORDIC
 	  this also parses the gpios and interrupts from device tree and sets
 	  the gpios and interrupt handler for handling the interrupt.
 
+config AUDIO_SENSOR
+	tristate "support sensor notify audio to control ultrasound"
+	default y
+
+config INFRARED_PROXIMITY
+	bool "Oneplus infrared proximity power control"
+	help
+	 Add support for oneplus infrared proximity power control.
+	 This driver is used to control the infrared proximity
+	 led power.
+
+source "drivers/misc/aw8697_haptic/Kconfig"
+source "drivers/misc/tri_state_key/Kconfig"
+source "drivers/misc/oplus_motor/Kconfig"
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"

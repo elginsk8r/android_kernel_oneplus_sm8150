@@ -60,3 +60,7 @@ config OPLUS_FEATURE_PROJECTINFO
 	define this config to get project verion from sharemem.
 	Maybe this value is from CDT or dynamic identify by hardware
 	id.
+
+config DRM_OPLUS_NOTIFY
+	bool
+	default y
