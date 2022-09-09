@@ -201,6 +201,15 @@ static int32_t cam_sensor_driver_get_dt_data(struct cam_sensor_ctrl_t *s_ctrl)
 
 	}
 
+	rc = of_property_read_u32(of_node, "sensor-eeprom-same-cci",
+			&s_ctrl->sensor_eeprom_same_cci);
+	CAM_DBG(CAM_SENSOR, "sensor-eeprom-same-cci %d, rc %d",
+		s_ctrl->cci_num, rc);
+	if (rc < 0) {
+		s_ctrl->sensor_eeprom_same_cci = 0x00;
+		rc = 0;
+	}
+
 	if (of_property_read_u32(of_node, "sensor-position-pitch",
 		&sensordata->pos_pitch) < 0) {
 		CAM_DBG(CAM_SENSOR, "Invalid sensor position");

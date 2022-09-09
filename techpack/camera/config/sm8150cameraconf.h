@@ -3,4 +3,6 @@
  * Copyright (c) 2022, The Linux Foundation. All rights reserved.
  */
 
+#define CONFIG_SPECTRA_CAMERA_KONA 1
 #define CONFIG_SPECTRA_CAMERA 1
+#define CONFIG_STMVL53L1 1
