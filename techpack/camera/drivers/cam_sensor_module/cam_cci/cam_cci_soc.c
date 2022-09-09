@@ -119,6 +119,14 @@ int cam_cci_init(struct v4l2_subdev *sd,
 		return rc;
 	}
 
+#if 1
+	if ((cci_dev->ref_count) &&
+		(cci_dev->cci_state == CCI_STATE_ENABLED)) {
+		cci_dev->ref_count++;
+		return 0;
+	}
+	cci_dev->ref_count++;
+#else
 	if (cci_dev->ref_count++) {
 		rc = cam_cci_init_master(cci_dev, master);
 		if (rc) {
@@ -130,6 +138,7 @@ int cam_cci_init(struct v4l2_subdev *sd,
 			cci_dev->ref_count, master);
 		return rc;
 	}
+#endif
 
 	ahb_vote.type = CAM_VOTE_ABSOLUTE;
 	ahb_vote.vote.level = CAM_LOWSVS_VOTE;

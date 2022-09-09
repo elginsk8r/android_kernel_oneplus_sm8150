@@ -118,5 +118,19 @@ int cam_ois_driver_soc_init(struct cam_ois_ctrl_t *o_ctrl)
 	if (rc < 0)
 		CAM_DBG(CAM_OIS, "failed: ois get dt data rc %d", rc);
 
+	rc = of_property_read_u8(of_node, "ois_gyro,id", &o_ctrl->ois_gyro_id);
+	if (rc < 0) {
+		/* Set default id 1 */
+		o_ctrl->ois_gyro_id = 1;
+		rc = 0;
+	}
+
+	rc = of_property_read_u8(of_node, "master_cci,id", &o_ctrl->cci_master_id);
+	if (rc < 0) {
+		/* Set default master 1 */
+		o_ctrl->cci_master_id = 1;
+		rc = 0;
+	}
+
 	return rc;
 }
