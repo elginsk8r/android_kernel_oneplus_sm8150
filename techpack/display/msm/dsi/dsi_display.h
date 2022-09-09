@@ -19,6 +19,7 @@
 #include "dsi_ctrl.h"
 #include "dsi_phy.h"
 #include "dsi_panel.h"
+#include "oplus_dsi_support.h"
 
 #define MAX_DSI_CTRLS_PER_DISPLAY             2
 #define DSI_CLIENT_NAME_SIZE		20
@@ -252,6 +253,8 @@ struct dsi_display {
 	void *dsi_clk_handle;
 	void *mdp_clk_handle;
 
+	/* For OP7 models, setting seed mode using delayed work */
+	struct delayed_work seed_work;
 	/* DEBUG FS */
 	struct dentry *root;
 
@@ -274,6 +277,11 @@ struct dsi_display {
 	u32 clk_gating_config;
 	bool queue_cmd_waits;
 	struct workqueue_struct *dma_cmd_workq;
+
+#ifdef OPLUS_BUG_STABILITY
+	struct completion switch_te_gate;
+	bool vsync_switch_pending;
+#endif
 };
 
 int dsi_display_dev_probe(struct platform_device *pdev);
@@ -725,6 +733,17 @@ enum dsi_pixel_format dsi_display_get_dst_format(
  * Return: Zero on Success
  */
 int dsi_display_cont_splash_config(void *display);
+#ifdef OPLUS_BUG_STABILITY
+struct dsi_display *get_main_display(void);
+extern char gamma_para[2][413];
+int dsi_display_gamma_read(struct dsi_display *dsi_display);
+void dsi_display_gamma_read_work(struct work_struct *work);
+
+/* Add for implement panel register read */
+int dsi_host_alloc_cmd_tx_buffer(struct dsi_display *display);
+int dsi_display_cmd_engine_enable(struct dsi_display *display);
+int dsi_display_cmd_engine_disable(struct dsi_display *display);
+#endif /* OPLUS_BUG_STABILITY */
 /*
  * dsi_display_get_panel_vfp - get panel vsync
  * @display: Pointer to private display structure

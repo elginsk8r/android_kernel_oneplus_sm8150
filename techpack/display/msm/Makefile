@@ -2,6 +2,7 @@
 ccflags-y := -I$(srctree)/include/drm -I$(srctree)/techpack/display/msm -I$(srctree)/techpack/display/msm/dsi -I$(srctree)/techpack/display/msm/dp
 ccflags-y += -I$(srctree)/techpack/display/msm/sde
 ccflags-y += -I$(srctree)/techpack/display/rotator
+ccflags-y += -I$(srctree)/techpack/display/msm/oplus
 
 msm_drm-$(CONFIG_DRM_MSM_DP) += dp/dp_usbpd.o \
 	dp/dp_parser.o \
@@ -114,6 +115,21 @@ msm_drm-$(CONFIG_DRM_MSM) += \
 	msm_smmu.o \
 	msm_prop.o \
 	msm_notifier.o\
+
+msm_drm-$(CONFIG_DRM_MSM) += \
+	oplus/oplus_mm_kevent_fb.o \
+	oplus/oplus_mm_kevent.o \
+	oplus/oplus_dsi_support.o \
+	oplus/oplus_display_private_api.o \
+	oplus/oplus_dc_diming.o \
+	oplus/oplus_onscreenfingerprint.o \
+	oplus/oplus_aod.o \
+	oplus/oplus_ffl.o \
+	oplus/oplus_display_panel.o \
+	oplus/oplus_display_panel_power.o \
+	oplus/oplus_display_panel_seed.o \
+	oplus/oplus_display_panel_common.o \
+	oplus/oplus_display_panel_hbm.o
 
 obj-$(CONFIG_DRM_MSM)	+= msm_drm.o
 

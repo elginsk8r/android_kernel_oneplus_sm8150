@@ -72,11 +72,20 @@ EXPORT_SYMBOL(msm_drm_unregister_client);
  * @v: notifier data, inculde display id and display blank
  *     event(unblank or power down).
  */
+#ifndef OPLUS_BUG_STABILITY
 static int msm_drm_notifier_call_chain(unsigned long val, void *v)
 {
 	return blocking_notifier_call_chain(&msm_drm_notifier_list, val,
 					    v);
 }
+#else /*OPLUS_BUG_STABILITY*/
+int msm_drm_notifier_call_chain(unsigned long val, void *v)
+{
+	return blocking_notifier_call_chain(&msm_drm_notifier_list, val,
+					    v);
+}
+EXPORT_SYMBOL(msm_drm_notifier_call_chain);
+#endif /*OPLUS_BUG_STABILITY*/
 
 static inline bool _msm_seamless_for_crtc(struct drm_device *dev,
 					struct drm_atomic_state *state,
@@ -201,8 +210,12 @@ msm_disable_outputs(struct drm_device *dev, struct drm_atomic_state *old_state)
 	struct drm_connector_state *old_conn_state;
 	struct drm_crtc *crtc;
 	struct drm_crtc_state *old_crtc_state;
+#ifndef OPLUS_BUG_STABILITY
 	struct msm_drm_notifier notifier_data;
 	int i, blank;
+#else
+	int i;
+#endif /* OPLUS_BUG_STABILITY */
 
 	SDE_ATRACE_BEGIN("msm_disable");
 	for_each_old_connector_in_state(old_state, connector,
@@ -243,11 +256,14 @@ msm_disable_outputs(struct drm_device *dev, struct drm_atomic_state *old_state)
 		DRM_DEBUG_ATOMIC("disabling [ENCODER:%d:%s]\n",
 				 encoder->base.id, encoder->name);
 
+#ifndef OPLUS_BUG_STABILITY
 		blank = MSM_DRM_BLANK_POWERDOWN;
 		notifier_data.data = &blank;
 		notifier_data.id = crtc_idx;
 		msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK,
 					     &notifier_data);
+#endif /* OPLUS_BUG_STABILITY */
+
 		/*
 		 * Each encoder has at most one connector (since we always steal
 		 * it away), so we won't call disable hooks twice.
@@ -263,8 +279,10 @@ msm_disable_outputs(struct drm_device *dev, struct drm_atomic_state *old_state)
 			funcs->dpms(encoder, DRM_MODE_DPMS_OFF);
 
 		drm_bridge_post_disable(encoder->bridge);
+#ifndef OPLUS_BUG_STABILITY
 		msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK,
 					    &notifier_data);
+#endif /* OPLUS_BUG_STABILITY */
 	}
 
 	for_each_old_crtc_in_state(old_state, crtc, old_crtc_state, i) {
@@ -408,11 +426,15 @@ static void msm_atomic_helper_commit_modeset_enables(struct drm_device *dev,
 	struct drm_crtc_state *new_crtc_state;
 	struct drm_connector *connector;
 	struct drm_connector_state *new_conn_state;
-	struct msm_drm_notifier notifier_data;
 	struct msm_drm_private *priv = dev->dev_private;
 	struct msm_kms *kms = priv->kms;
 	int bridge_enable_count = 0;
+#ifndef OPLUS_BUG_STABILITY
+	struct msm_drm_notifier notifier_data;
 	int i, blank;
+#else
+	int i;
+#endif /* OPLUS_BUG_STABILITY */
 
 	SDE_ATRACE_BEGIN("msm_enable");
 	for_each_oldnew_crtc_in_state(old_state, crtc, old_crtc_state,
@@ -472,6 +494,7 @@ static void msm_atomic_helper_commit_modeset_enables(struct drm_device *dev,
 		DRM_DEBUG_ATOMIC("enabling [ENCODER:%d:%s]\n",
 				 encoder->base.id, encoder->name);
 
+#ifndef OPLUS_BUG_STABILITY
 		if (connector->state->crtc->state->active_changed) {
 			blank = MSM_DRM_BLANK_UNBLANK;
 			notifier_data.data = &blank;
@@ -481,6 +504,8 @@ static void msm_atomic_helper_commit_modeset_enables(struct drm_device *dev,
 			msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK,
 					    &notifier_data);
 		}
+#endif /* OPLUS_BUG_STABILITY */
+
 		/*
 		 * Each encoder has at most one connector (since we always steal
 		 * it away), so we won't call enable hooks twice.
@@ -529,11 +554,13 @@ static void msm_atomic_helper_commit_modeset_enables(struct drm_device *dev,
 				 encoder->base.id, encoder->name);
 
 		drm_bridge_enable(encoder->bridge);
+#ifndef OPLUS_BUG_STABILITY
 		if (connector->state->crtc->state->active_changed) {
 			DRM_DEBUG_ATOMIC("Notify unblank\n");
 			msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK,
 					    &notifier_data);
 		}
+#endif /* OPLUS_BUG_STABILITY */
 	}
 	SDE_ATRACE_END("msm_enable");
 }
