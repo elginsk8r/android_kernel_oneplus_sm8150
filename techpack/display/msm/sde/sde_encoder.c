@@ -40,6 +40,11 @@
 #include "sde_core_irq.h"
 #include "sde_hw_top.h"
 #include "sde_hw_qdss.h"
+#ifdef OPLUS_BUG_STABILITY
+#include "oplus_display_private_api.h"
+#include "oplus_onscreenfingerprint.h"
+#include "oplus_dc_diming.h"
+#endif /* OPLUS_BUG_STABILITY */
 
 #define SDE_DEBUG_ENC(e, fmt, ...) SDE_DEBUG("enc%d " fmt,\
 		(e) ? (e)->base.base.id : -1, ##__VA_ARGS__)
@@ -1933,6 +1938,9 @@ static int _sde_encoder_rsc_client_update_vsync_wait(
 	int wait_count = 0;
 	struct drm_crtc *primary_crtc;
 	struct drm_crtc *crtc;
+#ifdef OPLUS_FEATURE_AOD_RAMLESS
+	struct dsi_display *display = get_main_display();
+#endif /* OPLUS_FEATURE_AOD_RAMLESS */
 
 	crtc = sde_enc->crtc;
 
@@ -1963,11 +1971,18 @@ static int _sde_encoder_rsc_client_update_vsync_wait(
 				sde_enc->rsc_client))
 			break;
 
-		if (crtc->base.id == wait_vblank_crtc_id)
+		if (crtc->base.id == wait_vblank_crtc_id) {
 			ret = sde_encoder_wait_for_event(drm_enc,
 					MSM_ENC_VBLANK);
-		else
+#ifdef OPLUS_FEATURE_AOD_RAMLESS
+			if (display && display->panel && display->panel->oplus_priv.is_aod_ramless) {
+				if (ret == -EWOULDBLOCK)
+					ret = 0;
+			}
+#endif /* OPLUS_FEATURE_AOD_RAMLESS */
+		} else {
 			drm_wait_one_vblank(drm_enc->dev, pipe);
+		}
 
 		if (ret) {
 			SDE_ERROR_ENC(sde_enc,
@@ -2010,6 +2025,12 @@ static int _sde_encoder_update_rsc_client(
 	struct msm_drm_private *priv;
 	struct sde_kms *sde_kms;
 	struct drm_encoder *enc;
+#ifdef OPLUS_FEATURE_AOD_RAMLESS
+	int  lp_mode = -1;
+	struct list_head *connector_list;
+	struct drm_connector *conn = NULL, *conn_iter;
+	struct dsi_display *display = get_main_display();
+#endif /* OPLUS_FEATURE_AOD_RAMLESS */
 
 	if (!drm_enc || !drm_enc->dev) {
 		SDE_ERROR("invalid encoder arguments\n");
@@ -2040,6 +2061,12 @@ static int _sde_encoder_update_rsc_client(
 	}
 
 	sde_kms = to_sde_kms(priv->kms);
+
+#ifdef OPLUS_FEATURE_AOD_RAMLESS
+	if ( display && display->panel && display->panel->oplus_priv.is_aod_ramless ) {
+		connector_list = &sde_kms->dev->mode_config.connector_list;
+	}
+#endif /* OPLUS_FEATURE_AOD_RAMLESS */
 
 	/**
 	 * only primary command mode panel without Qsync can request CMD state.
@@ -2074,6 +2101,20 @@ static int _sde_encoder_update_rsc_client(
 	if (IS_SDE_MAJOR_SAME(sde_kms->core_rev, SDE_HW_VER_600) &&
 			 (rsc_state == SDE_RSC_VID_STATE))
 		rsc_state = SDE_RSC_CLK_STATE;
+
+#ifdef OPLUS_FEATURE_AOD_RAMLESS
+	if (display && display->panel && display->panel->oplus_priv.is_aod_ramless) {
+		list_for_each_entry(conn_iter, connector_list, head)
+		if (conn_iter->encoder == drm_enc)
+			conn = conn_iter;
+
+		if (conn && conn->state) {
+			lp_mode = sde_connector_get_property(conn->state, CONNECTOR_PROP_LP);
+			if ((lp_mode == SDE_MODE_DPMS_LP1 || lp_mode == SDE_MODE_DPMS_LP2) && enable)
+				rsc_state = SDE_RSC_CLK_STATE;
+		}
+	}
+#endif /* OPLUS_FEATURE_AOD_RAMLESS */
 
 	SDE_EVT32(rsc_state, qsync_mode);
 
@@ -4517,6 +4558,7 @@ static void _sde_encoder_setup_dither(struct sde_encoder_phys *phys)
 			}
 		}
 	} else {
+		if (_sde_encoder_setup_dither_for_onscreenfingerprint(phys, dither_cfg, len))
 		phys->hw_pp->ops.setup_dither(phys->hw_pp, dither_cfg, len);
 	}
 }
@@ -4900,6 +4942,13 @@ int sde_encoder_prepare_for_kickoff(struct drm_encoder *drm_enc,
 	SDE_DEBUG_ENC(sde_enc, "\n");
 	SDE_EVT32(DRMID(drm_enc));
 
+#ifdef OPLUS_BUG_STABILITY
+	if (sde_enc->cur_master) {
+		sde_connector_update_backlight(sde_enc->cur_master->connector, false);
+		sde_connector_update_hbm(sde_enc->cur_master->connector);
+	}
+#endif /* OPLUS_BUG_STABILITY */
+
 	is_cmd_mode = sde_encoder_check_curr_mode(drm_enc,
 				MSM_DISPLAY_CMD_MODE);
 	if (sde_enc->cur_master && sde_enc->cur_master->connector
@@ -5064,6 +5113,10 @@ void sde_encoder_kickoff(struct drm_encoder *drm_enc, bool is_error)
 	}
 
 	SDE_ATRACE_END("encoder_kickoff");
+#ifdef OPLUS_BUG_STABILITY
+   sde_connector_update_backlight(sde_enc->cur_master->connector, true);
+#endif /* OPLUS_BUG_STABILITY */
+
 }
 
 void sde_encoder_helper_get_pp_line_count(struct drm_encoder *drm_enc,
