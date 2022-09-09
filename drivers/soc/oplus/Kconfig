@@ -1,0 +1,2 @@
+source "drivers/soc/oplus/sensor/Kconfig"
+source "drivers/soc/oplus/system/Kconfig"
