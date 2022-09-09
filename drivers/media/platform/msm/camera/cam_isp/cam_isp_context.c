@@ -752,7 +752,7 @@ static int __cam_isp_ctx_handle_buf_done_in_activated_state(
 			CAM_ISP_CTX_EVENT_BUFDONE, req);
 	}
 
-	if (ctx_isp->active_req_cnt && ctx_isp->irq_delay_detect) {
+	if (ctx_isp->active_req_cnt && ctx_isp->irq_delay_detect && ctx_isp->hfr_mode == false) {
 		CAM_ERR(CAM_ISP, "isp req[%lld] IRQ buf done got delayed",
 				req->request_id);
 		req = list_first_entry(&ctx->active_req_list,
@@ -1029,6 +1029,7 @@ static int __cam_isp_ctx_notify_sof_in_activated_state(
 					jiffies_to_msecs(jiffies);
 				__cam_isp_ctx_update_event_record(ctx_isp,
 					CAM_ISP_CTX_EVENT_EPOCH, req);
+				req_isp = (struct cam_isp_ctx_req *) req->req_priv;
 				break;
 			}
 		}
@@ -1054,6 +1055,11 @@ static int __cam_isp_ctx_notify_sof_in_activated_state(
 			"Can not notify SOF to CRM for ctx %u",
 			ctx->ctx_id);
 		rc = -EFAULT;
+	}
+
+	if (req_isp && req_isp->num_acked == req_isp->num_fence_map_out) {
+		list_del_init(&req->list);
+		list_add_tail(&req->list, &ctx->free_req_list);
 	}
 
 	return 0;
@@ -1167,6 +1173,9 @@ static int __cam_isp_ctx_reg_upd_in_sof(struct cam_isp_context *ctx_isp,
 
 	if (req_isp && req_isp->hw_update_data.fps)
 		ctx_isp->fps = req_isp->hw_update_data.fps;
+
+	if (ctx_isp->fps > 240)
+		ctx_isp->hfr_mode = true;
 
 	if (ctx_isp->frame_id == 1)
 		ctx_isp->irq_timestamps = rup_event_data->irq_mono_boot_time;
@@ -4455,6 +4464,7 @@ int cam_isp_context_init(struct cam_isp_context *ctx,
 	ctx->substate_activated = CAM_ISP_CTX_ACTIVATED_SOF;
 	ctx->substate_machine = cam_isp_ctx_activated_state_machine;
 	ctx->substate_machine_irq = cam_isp_ctx_activated_state_machine_irq;
+	ctx->hfr_mode = false;
 
 	for (i = 0; i < CAM_CTX_REQ_MAX; i++) {
 		ctx->req_base[i].req_priv = &ctx->req_isp[i];

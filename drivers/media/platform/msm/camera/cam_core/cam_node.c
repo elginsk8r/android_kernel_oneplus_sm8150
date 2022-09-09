@@ -880,6 +880,7 @@ release_kfree:
 		}
 		break;
 	}
+#if 0
 	case CAM_DUMP_REQ: {
 		struct cam_dump_req_cmd dump;
 
@@ -902,6 +903,7 @@ release_kfree:
 		}
 		break;
 	}
+#endif
 	default:
 		CAM_ERR(CAM_CORE, "Unknown op code %d", cmd->op_code);
 		rc = -EINVAL;

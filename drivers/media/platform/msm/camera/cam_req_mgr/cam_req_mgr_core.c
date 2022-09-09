@@ -1264,6 +1264,7 @@ static int __cam_req_mgr_process_req(struct cam_req_mgr_core_link *link,
 			} else {
 				rc = __cam_req_mgr_check_sync_req_is_ready(
 					link, slot);
+				link->initial_sync_req = -1;
 			}
 		} else {
 			if (link->in_msync_mode) {
@@ -1283,6 +1284,7 @@ static int __cam_req_mgr_process_req(struct cam_req_mgr_core_link *link,
 			if (!rc)
 				rc = __cam_req_mgr_check_link_is_ready(link,
 					slot->idx, false);
+			link->initial_sync_req = -1;
 		}
 
 		if (rc < 0) {

@@ -273,6 +273,7 @@ struct cam_isp_context {
 	uint64_t                         irq_timestamps;
 	uint32_t                         fps;
 	uint32_t                         bubble_frame_cnt;
+	bool                             hfr_mode;
 };
 
 /**

@@ -45,6 +45,14 @@ int cam_cci_init(struct v4l2_subdev *sd,
 
 	CAM_DBG(CAM_CCI, "Base address %pK", base);
 
+#if 1
+	if ((cci_dev->ref_count) &&
+		(cci_dev->cci_state == CCI_STATE_ENABLED)) {
+		cci_dev->ref_count++;
+		return 0;
+	}
+	cci_dev->ref_count++;
+#else
 	if (cci_dev->ref_count++) {
 		CAM_DBG(CAM_CCI, "ref_count %d", cci_dev->ref_count);
 		CAM_DBG(CAM_CCI, "master %d", master);
@@ -78,6 +86,7 @@ int cam_cci_init(struct v4l2_subdev *sd,
 		}
 		return 0;
 	}
+#endif
 
 	ahb_vote.type = CAM_VOTE_ABSOLUTE;
 	ahb_vote.vote.level = CAM_SVS_VOTE;
