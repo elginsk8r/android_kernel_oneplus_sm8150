@@ -3510,13 +3510,8 @@ static int dwc3_msm_vbus_notifier(struct notifier_block *nb,
 	if (!edev || !mdwc)
 		return NOTIFY_DONE;
 
-	if (!mdwc->usb_data_enabled) {
-		if (event)
-			dwc3_msm_gadget_vbus_draw(mdwc, 500);
-		else
-			dwc3_msm_gadget_vbus_draw(mdwc, 0);
+	if (!mdwc->usb_data_enabled)
 		return NOTIFY_DONE;
-	}
 
 	dwc = platform_get_drvdata(mdwc->dwc3);
 
@@ -4385,12 +4380,13 @@ static int dwc3_msm_remove(struct platform_device *pdev)
 	int ret_pm;
 
 	device_remove_file(&pdev->dev, &dev_attr_mode);
-	device_remove_file(&pdev->dev, &dev_attr_usb_data_enabled);
 
 	if (mdwc->dpdm_nb.notifier_call) {
 		regulator_unregister_notifier(mdwc->dpdm_reg, &mdwc->dpdm_nb);
 		mdwc->dpdm_nb.notifier_call = NULL;
 	}
+
+	device_remove_file(&pdev->dev, &dev_attr_usb_data_enabled);
 
 	if (mdwc->usb_psy)
 		power_supply_put(mdwc->usb_psy);
@@ -4952,6 +4948,12 @@ static int dwc3_msm_gadget_vbus_draw(struct dwc3_msm *mdwc, unsigned int mA)
 	if (mdwc->max_power == mA || psy_type != POWER_SUPPLY_TYPE_USB)
 		return 0;
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	dev_info(mdwc->dev, "Avail curr from USB = %u, pre max_power = %u\n", mA, mdwc->max_power);
+	if (mA == 0 || mA == 2) {
+		return 0;
+	}
+#endif
 	/* Set max current limit in uA */
 	pval.intval = 1000 * mA;
 
@@ -5055,8 +5057,7 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 			mdwc->drd_state = DRD_STATE_PERIPHERAL;
 			work = 1;
 		} else {
-			if (mdwc->usb_data_enabled)
-				dwc3_msm_gadget_vbus_draw(mdwc, 0);
+			dwc3_msm_gadget_vbus_draw(mdwc, 0);
 			dev_dbg(mdwc->dev, "Cable disconnected\n");
 		}
 		break;
