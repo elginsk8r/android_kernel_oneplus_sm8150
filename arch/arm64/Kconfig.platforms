@@ -153,6 +153,13 @@ config ARCH_QCOM
 	help
 	  This enables support for the ARMv8 based Qualcomm chipsets.
 
+#ifdef CONFIG_OPLUS_SYSTEM_KERNEL
+
+config OPLUS_SYSTEM_KERNEL_QCOM
+	default y if ARCH_QCOM
+
+#endif /*CONFIG_OPLUS_SYSTEM_KERNEL*/
+
 config ARCH_SM8150
 	bool "Enable Support for Qualcomm Technologies, Inc. SM8150"
 	depends on ARCH_QCOM
