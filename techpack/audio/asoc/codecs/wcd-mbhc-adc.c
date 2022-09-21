@@ -22,10 +22,17 @@
 #include "wcd-mbhc-adc.h"
 #include <asoc/wcd-mbhc-v2.h>
 #include <asoc/pdata.h>
+#ifdef OPLUS_FEATURE_FSA4480
+#include <asoc/wcd934x_registers.h>
+#endif
 
+#ifdef OPLUS_FEATURE_FSA4480
+#define WCD_MBHC_ADC_HS_THRESHOLD_MV    2550
+#else
 #define WCD_MBHC_ADC_HS_THRESHOLD_MV    1700
+#endif
 #define WCD_MBHC_ADC_HPH_THRESHOLD_MV   75
-#define WCD_MBHC_ADC_MICBIAS_MV         1800
+#define WCD_MBHC_ADC_MICBIAS_MV         2700
 #define WCD_MBHC_FAKE_INS_RETRY         4
 
 static int wcd_mbhc_get_micbias(struct wcd_mbhc *mbhc)
@@ -539,7 +546,11 @@ static bool wcd_is_special_headset(struct wcd_mbhc *mbhc)
 		/* Wait for 50ms for FSM to update result */
 		msleep(50);
 		output_mv = wcd_measure_adc_once(mbhc, MUX_CTL_IN2P);
+		#ifndef OPLUS_ARCH_EXTENDS
 		if (output_mv <= adc_threshold) {
+		#else /* OPLUS_ARCH_EXTENDS */
+		if ((output_mv >= 0) && (output_mv <= adc_threshold)) {
+		#endif /* OPLUS_ARCH_EXTENDS */
 			pr_debug("%s: Special headset detected in %d msecs\n",
 					__func__, delay);
 			is_spl_hs = true;
@@ -632,6 +643,10 @@ static void wcd_mbhc_adc_detect_plug_type(struct wcd_mbhc *mbhc)
 	if (mbhc->mbhc_cb->mbhc_micbias_control) {
 		mbhc->mbhc_cb->mbhc_micbias_control(component, MIC_BIAS_2,
 						    MICB_ENABLE);
+#ifdef OPLUS_ARCH_EXTENDS
+		if(mbhc->headset_bias_alwayon)
+			mbhc->micbias_enable = true;
+#endif /* OPLUS_ARCH_EXTENDS */
 	} else {
 		pr_err("%s: Mic Bias is not enabled\n", __func__);
 		return;
@@ -661,6 +676,13 @@ static int wcd_mbhc_get_plug_from_adc(struct wcd_mbhc *mbhc, int adc_result)
 	enum wcd_mbhc_plug_type plug_type = MBHC_PLUG_TYPE_INVALID;
 	u32 hph_thr = 0, hs_thr = 0;
 
+	#ifdef OPLUS_ARCH_EXTENDS
+	pr_info("%s: adc_result %d mv\n", __func__, adc_result);
+	if (adc_result < 0) {
+		return plug_type;
+	}
+	#endif /* OPLUS_ARCH_EXTENDS */
+
 	hs_thr = wcd_mbhc_adc_get_hs_thres(mbhc);
 	hph_thr = wcd_mbhc_adc_get_hph_thres(mbhc);
 
@@ -682,14 +704,19 @@ static void wcd_correct_swch_plug(struct work_struct *work)
 	enum wcd_mbhc_plug_type plug_type = MBHC_PLUG_TYPE_INVALID;
 	unsigned long timeout;
 	bool wrk_complete = false;
+	#ifdef OPLUS_ARCH_EXTENDS
 	int pt_gnd_mic_swap_cnt = 0;
 	int no_gnd_mic_swap_cnt = 0;
+	#endif
 	bool is_pa_on = false, spl_hs = false, spl_hs_reported = false;
+	#ifdef OPLUS_ARCH_EXTENDS
 	int ret = 0;
+	#endif
 	int spl_hs_count = 0;
 	int output_mv = 0;
 	int cross_conn;
 	int try = 0;
+
 	int hs_threshold, micbias_mv;
 
 	pr_debug("%s: enter\n", __func__);
@@ -777,6 +804,10 @@ correct_plug_type:
 		 * btn press/release for HEADSET type during correct work.
 		 */
 		output_mv = wcd_measure_adc_once(mbhc, MUX_CTL_IN2P);
+#ifdef OPLUS_ARCH_EXTENDS
+		if (output_mv < 0)
+			continue;
+#endif /* OPLUS_ARCH_EXTENDS */
 
 		/*
 		 * instead of hogging system by contineous polling, wait for
@@ -797,6 +828,11 @@ correct_plug_type:
 				mbhc->micbias_enable = true;
 			}
 		}
+
+#ifdef OPLUS_ARCH_EXTENDS
+		if (output_mv < 0)
+			continue;
+#endif /* OPLUS_ARCH_EXTENDS */
 
 		if (mbhc->mbhc_cb->hph_pa_on_status)
 			is_pa_on = mbhc->mbhc_cb->hph_pa_on_status(
@@ -1024,6 +1060,16 @@ static irqreturn_t wcd_mbhc_adc_hs_rem_irq(int irq, void *data)
 	pr_debug("%s: enter\n", __func__);
 	WCD_MBHC_RSC_LOCK(mbhc);
 
+#ifdef OPLUS_FEATURE_FSA4480
+	if (snd_soc_component_update_bits(mbhc->component, WCD934X_INTR_BYPASS1, 0x12, 0x0) < 0)
+		pr_info("%s: reg update fail!\n", __func__);
+
+	if (snd_soc_component_update_bits(mbhc->component, WCD934X_INTR_BYPASS1, 0x12, 0x12) < 0)
+		pr_info("%s: reg update fail!\n", __func__);
+
+	goto exit;
+#endif
+
 	timeout = jiffies +
 		  msecs_to_jiffies(WCD_FAKE_REMOVAL_MIN_PERIOD_MS);
 	adc_threshold = wcd_mbhc_adc_get_hs_thres(mbhc);
@@ -1117,6 +1163,16 @@ static irqreturn_t wcd_mbhc_adc_hs_ins_irq(int irq, void *data)
 
 	pr_debug("%s: enter\n", __func__);
 
+#ifdef OPLUS_FEATURE_FSA4480
+	if (snd_soc_component_update_bits(mbhc->component, WCD934X_INTR_BYPASS1, 0x12, 0x0) < 0)
+		pr_info("%s: reg update fail!\n", __func__);
+
+	if (snd_soc_component_update_bits(mbhc->component, WCD934X_INTR_BYPASS1, 0x12, 0x12) < 0)
+		pr_info("%s: reg update fail!\n", __func__);
+
+	goto done;
+#endif
+
 	/*
 	 * ADC COMPLETE and ELEC_REM interrupts are both enabled for HEADPHONE,
 	 * need to reject the ADC COMPLETE interrupt which follows ELEC_REM one
@@ -1142,6 +1198,15 @@ static irqreturn_t wcd_mbhc_adc_hs_ins_irq(int irq, void *data)
 	} while (--clamp_retry);
 
 	WCD_MBHC_RSC_LOCK(mbhc);
+
+#ifdef OPLUS_ARCH_EXTENDS
+	if (mbhc->use_usbc_detect && wcd_swch_level_remove(mbhc)) {
+		pr_warn("%s: Switch level is low ", __func__);
+		WCD_MBHC_RSC_UNLOCK(mbhc);
+		return IRQ_HANDLED;
+	}
+#endif
+
 	/*
 	 * If current plug is headphone then there is no chance to
 	 * get ADC complete interrupt, so connected cable should be
@@ -1172,6 +1237,10 @@ static irqreturn_t wcd_mbhc_adc_hs_ins_irq(int irq, void *data)
 	mbhc->force_linein = false;
 	wcd_mbhc_adc_detect_plug_type(mbhc);
 	WCD_MBHC_RSC_UNLOCK(mbhc);
+
+#ifdef OPLUS_FEATURE_FSA4480
+done:
+#endif
 	pr_debug("%s: leave\n", __func__);
 	return IRQ_HANDLED;
 }
