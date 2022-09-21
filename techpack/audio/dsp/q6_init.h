@@ -94,5 +94,20 @@ static inline void digital_cdc_rsc_mgr_exit(void)
 }
 #endif /* CONFIG_DIGITAL_CDC_RSC_MGR */
 
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+int elliptic_driver_init(void);
+int elliptic_driver_exit(void);
+#else
+static inline int elliptic_driver_init(void)
+{
+	return 0;
+}
+
+static inline int elliptic_driver_exit(void)
+{
+	return 0;
+}
+#endif /* OPLUS_FEATURE_MM_ULTRASOUND */
+
 #endif
 
