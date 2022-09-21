@@ -21,6 +21,9 @@
 #include <linux/of_device.h>
 #include <linux/sysfs.h>
 #include <linux/workqueue.h>
+#ifdef OPLUS_BUG_STABILITY
+#include <linux/regulator/consumer.h>
+#endif // OPLUS_BUG_STABILITY
 
 #include <soc/qcom/subsystem_restart.h>
 
@@ -41,6 +44,7 @@ struct adsp_loader_private {
 	void *pil_h;
 	struct kobject *boot_adsp_obj;
 	struct attribute_group *attr_group;
+	char *adsp_fw_name;
 };
 
 static struct kobj_attribute adsp_boot_attribute =
@@ -68,6 +72,9 @@ static void adsp_load_fw(struct work_struct *adsp_ldr_work)
 	int rc = 0;
 	u32 adsp_state;
 	const char *img_name;
+#ifdef OPLUS_BUG_STABILITY
+	struct regulator *vdd_1v8 = NULL;
+#endif // OPLUS_BUG_STABILITY
 
 	if (!pdev) {
 		dev_err(&pdev->dev, "%s: Platform device null\n", __func__);
@@ -86,6 +93,18 @@ static void adsp_load_fw(struct work_struct *adsp_ldr_work)
 			"%s: ADSP state = %x\n", __func__, adsp_state);
 		goto fail;
 	}
+
+#ifdef OPLUS_BUG_STABILITY
+	vdd_1v8 = regulator_get(&pdev->dev, "vddio");
+	if (vdd_1v8 != NULL) {
+		dev_err(&pdev->dev,"%s: vdd_1v8 is not NULL\n", __func__);
+		regulator_set_voltage(vdd_1v8, 1704000, 1952000);
+		regulator_set_load(vdd_1v8, 200000);
+		regulator_enable(vdd_1v8);
+	} else {
+		dev_err(&pdev->dev,"%s: vdd_1v8 is NULL\n", __func__);
+	}
+#endif // OPLUS_BUG_STABILITY
 
 	rc = of_property_read_string(pdev->dev.of_node,
 					"qcom,proc-img-to-load",
