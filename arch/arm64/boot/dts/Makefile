@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0
+
 dtstree		:= $(srctree)/$(src)
 
 vendor := $(dtstree)/vendor
@@ -33,9 +34,11 @@ subdir-y += zte
 
 
 else
-    ifeq ($(CONFIG_ARCH_SDM845),y)
+	ifeq ($(CONFIG_OPLUS_FEATURE_OPROJECT),y)
+		subdir-y += oplus
+	else ifeq ($(CONFIG_ARCH_SDM845),y)
         subdir-y += qcom
-    else
+	else
         subdir-y += vendor
     endif
 endif
