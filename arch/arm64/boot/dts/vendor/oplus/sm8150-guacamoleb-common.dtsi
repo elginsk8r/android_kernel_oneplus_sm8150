@@ -1,0 +1,223 @@
+/* This is for guacamoleb family */
+#include "sm8150-common.dtsi"
+
+&thermal_zones {
+	skin-msm-therm {
+		trips {
+			/delete-node/ freq_config5;
+		};
+		cooling-maps {
+			freq_dev6 {
+				trip = <&freq_config3>;
+			};
+
+			freq_dev7 {
+				trip = <&freq_config4>;
+			};
+		};
+	};
+};
+
+&usb2_phy0 {
+	qcom,param-override-seq =
+		<0x67 0x6c/*Disconnection voltage +21.56%*/
+		 0x09 0x70/*Pre-emphasis:4x DC voltage level:+13.30%*/
+		 0x28 0x74>;
+};
+
+&qupv3_se17_i2c {
+	s3706_ts: synaptics_s3706@20 {
+		status = "ok";
+		compatible = "synaptics-s3706";
+		reg = <0x20>;
+		chip-name = "S3706";
+
+		/* Interrupt && Irq-gpio */
+		interrupt-parent = <&tlmm>;
+		interrupts = <122 0x2008>;
+
+		/* Power Config */
+		vdd_2v8-supply = <&pm8150_l17>;
+		vdd_2v8_volt = <3008000>;
+		enable1v8_gpio = <&tlmm 119 0x00>;
+
+		/* Other HW Resource */
+		irq-gpio = <&tlmm 122 0x2008>;
+		reset-gpio = <&tlmm 54 0x00>;
+		pinctrl-names = "pin_set_high", "pin_set_low";
+		pinctrl-0 = <&tp_irq_active &tp_rst_active &tp_1v8_active>;
+		pinctrl-1 = <&tp_rst_suspend &tp_1v8_suspend>;
+
+		touchpanel,max-num-support = <10>;
+		touchpanel,display-coords = <1079 2339>;
+		touchpanel,panel-coords = <1079 2339>;
+		touchpanel,tx-rx-num = <16 33>;
+		touchpanel,touchmajor-limit = <0 54>;
+
+		tp_type = <8>;
+		platform_support_project = <18857 18865 19863>;
+		platform_support_project_dir = <18857 18865 19863>;
+		platform_support_project_commandline = "default_commandline", "default_commandline", "default_commandline";
+
+		/* SW Support Feature Control */
+		black_gesture_support;
+		fw_update_app_support;
+		smart_gesture_support;
+		game_switch_support;
+		fw_edge_limit_support;
+		charger_pump_support;
+		pressure_report_support;
+		fingerprint_underscreen_support;
+		old_firmware_flag_check; /*for old lsi project*/
+		face_detect_support;
+		single_tap_support;
+
+		/*
+		 *Virtual Key Config:
+		 *1:touchpanel,button-type: <virtualkey_type  supportted_button-map>
+		 *virtualkey_type:
+		 *Type 1: using board_properties
+		 *Type 2: using same IC (button zone&& touch zone are seprate)
+		 *Type 3: using diffrent IC (button zone&& touch zone are seprate)
+		 *Type 4: No need of virtual key process
+		 *supportted_button-map:select|menu|home|back
+		 *
+		 *2:touchpanel,button-map
+		 *type (X1,Y1)(X2,Y2)(X3,Y3)(Width_X,Hight_Y)--Only when button-type is 0
+		*/
+
+		touchpanel,button-type = <4>;
+		touchpanel.button-TRx = <0 0>;
+	};
+};
+
+&qupv3_se9_i2c {
+	qcom,clk-freq-out = <400000>;
+	status = "ok";
+	magnachip@0D {
+		compatible = "oplus,hall-mxm1120,up";
+		reg = <0x0D>;
+		dhall,id = <1>;
+		vdd-supply = <&pm8150l_l7>;
+		magnachip,init-interval = <200>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <26 0x02>;
+		dhall,irq-gpio = <&tlmm 26 0x2008>;
+		pinctrl-names = "uphall_tri_state_key_active";
+		pinctrl-0 = <&uphall_tri_state_key_active>;
+	};
+
+	magnachip@0C {
+		compatible = "oplus,hall-mxm1120,down";
+		reg = <0x0C>;
+		dhall,id = <2>;
+		vdd-supply = <&pm8150l_l7>;
+		magnachip,init-interval = <200>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <27 0x02>;
+		dhall,irq-gpio = <&tlmm 27 0x2008>;
+		pinctrl-names = "downhall_tri_state_key_active";
+		pinctrl-0 = <&downhall_tri_state_key_active>;
+	};
+};
+
+&tlmm {
+	uphall_tri_state_key_active: uphall_tri_state_key_active {
+		mux {
+			pins = "gpio26";
+			function = "gpio";
+		};
+		config {
+			pins = "gpio26";
+			drive-strength = <2>;
+			bias-pull-up;
+		};
+	};
+
+	downhall_tri_state_key_active: downhall_tri_state_key_active {
+		mux {
+			pins = "gpio27";
+			function = "gpio";
+		};
+		config {
+			pins = "gpio27";
+			drive-strength = <2>;
+			bias-pull-up;
+		};
+	};
+};
+
+/* OnePlus add haptic, by yangfb*/
+&aw8697_haptic {
+	qcom,device_id = <1040>;
+	op,count_go;
+};
+
+&pm8150b_gpios {
+	haptics_boost {
+		haptics_boost_default: haptics_boost_default {
+			pins = "gpio5";
+			function = "normal";
+			output-enable;
+			input-disable;
+			bias-disable;
+			qcom,drive-strength = <3>; /* high */
+			power-source = <0>; /* VPH_PWR */
+		};
+	};
+};
+
+&vendor {
+	haptics_boost_vreg: haptics_boost_vreg {
+		compatible = "regulator-fixed";
+		regulator-name = "haptics_boost";
+		gpio = <&pm8150b_gpios 5 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-enable-ramp-delay = <300>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&haptics_boost_default>;
+		status = "ok";
+	};
+};
+
+&pm8150b_haptics {
+	status = "ok";
+	vdd-supply = <&haptics_boost_vreg>;
+	wf_6 {
+		/* WEAK */
+		qcom,effect-id = <6>;
+		qcom,wf-vmax-mv = <2500>;
+		qcom,wf-pattern = [7e 7e 7e fe fe];
+		qcom,wf-play-rate-us = <6667>;
+		qcom,wf-brake-pattern = [00 00 00 00];
+		qcom,lra-auto-resonance-disable;
+	};
+	wf_7 {
+		/* MIDDLE */
+		qcom,effect-id = <7>;
+		qcom,wf-vmax-mv = <2500>;
+		qcom,wf-pattern = [7e 7e 7e 7e fe fe fe];
+		qcom,wf-play-rate-us = <6667>;
+		qcom,wf-brake-pattern = [00 00 00 00];
+		qcom,lra-auto-resonance-disable;
+	};
+	wf_8 {
+		/* STRONG */
+		qcom,effect-id = <8>;
+		qcom,wf-vmax-mv = <2500>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e fe fe fe];
+		qcom,wf-play-rate-us = <6667>;
+		qcom,wf-brake-pattern = [00 00 00 00];
+		qcom,lra-auto-resonance-disable;
+	};
+};
+
+&pm8150_gpios {
+	rf_pm8150_cable_ant1: rf_pm8150_cable_ant1 {
+		pins = "gpio4";
+		function = "normal";
+		power-source = <0>;
+		bias-pull-up;
+		input-enable;
+	};
+};

@@ -1,0 +1,178 @@
+/* This is for guacamole family */
+#include "sm8150-common.dtsi"
+
+&usb2_phy0 {
+	qcom,param-override-seq =
+		<0x67 0x6c/*Disconnection voltage +21.56%*/
+		 0x06 0x70/*Pre-emphasis:4x DC voltage level:+6.50%*/
+		 0x28 0x74>;
+};
+
+&vendor {
+	motor_pl: motor_pl {
+		compatible = "oneplus-motor";
+		interrupt-parent = <&tlmm>;
+		interrupts = <163 0x2>; 
+		motor,irq-gpio = <&tlmm 163 0x2008>;
+		pinctrl-names = "free_fall_input";
+		pinctrl-0 = <&free_fall_input>;
+		structure,id = <0>;
+	};
+
+	step_motor: step_motor {
+		compatible = "oneplus,step-motor";
+		status = "okay";
+
+		pwms = <&pm8150l_pwm 1 20000000>;
+		op,boost-en-pin = <&pm8150b_gpios 12 GPIO_ACTIVE_LOW>;
+		op,mode0-pin = <&pm8150b_gpios 5 GPIO_ACTIVE_LOW>;
+		op,mode1-pin = <&pm8150l_gpios 8 GPIO_ACTIVE_LOW>;
+		op,nsleep-pin = <&pm8150_gpios 10 GPIO_ACTIVE_LOW>;
+		op,dir-pin = <&pm8150l_gpios 11 GPIO_ACTIVE_LOW>;
+		op,step-pin = <&pm8150l_gpios 10 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "boost",
+				"m0_gpio",
+				"m0_high_impedance",
+				"m1_gpio",
+				"sleep_gpio",
+				"dir_gpio",
+				"pwm_config";
+		pinctrl-0 = <&motor_boost_en>;
+		pinctrl-1 = <&motor_mode0_gpio>;
+		pinctrl-2 = <&motor_mode0_hi_impedance>;
+		pinctrl-3 = <&motor_mode1_gpio>;
+		pinctrl-4 = <&motor_sleep_gpio>;
+		pinctrl-5 = <&motor_dir_gpio>;
+		pinctrl-6 = <&motor_pwm_config>;
+	};
+};
+
+&soc {
+	tri_state_key: tri_state_key {
+		compatible = "oplus, tri-state-key";
+		status = "okay";
+		interrupt-parent = <&tlmm>;
+		tristate,gpio_key1 = <&tlmm 27 0x00>;
+		tristate,gpio_key2 = <&tlmm 134 0x00>;
+		tristate,gpio_key3 = <&tlmm 125 0x00>;
+		pinctrl-names = "pmx_tri_state_key_active",
+						"pmx_tri_state_key_suspend";
+		pinctrl-0 = <&tri_state_key_active>;
+		pinctrl-1 = <&tri_state_key_suspend>;
+	};
+};
+
+&qupv3_se1_i2c {
+	status = "ok";
+	magnachip@0C {
+		compatible = "magnachip,mxm1120,up";
+		reg = <0x0C>;
+		vdd-supply = <&pm8150l_l7>;
+		vio-supply = <&pm8150l_l8>;
+		magnachip,init-interval = <200>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <120 0x2>;
+		dhall,irq-gpio = <&tlmm 120 0x2008>;
+		mxm,id = <1>;
+	};
+	magnachip@0D {
+		compatible = "magnachip,mxm1120,down";
+		reg = <0x0D>;
+		vdd-supply = <&pm8150l_l7>;
+		vio-supply = <&pm8150l_l8>;
+		magnachip,init-interval = <200>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <121 0x2>;
+		dhall,irq-gpio = <&tlmm 121 0x2008>;
+		mxm,id = <2>;
+	};
+};
+
+&qupv3_se17_i2c {
+	sec_ts: sec_s6sy761@48 {
+		status = "ok";
+		compatible = "sec-s6sy761";
+		reg = <0x48>;
+		chip-name = "S6SY761";
+
+		/* Interrupt && Irq-gpio */
+		interrupt-parent = <&tlmm>;
+		interrupts = <122 0x2008>;
+
+		/* Power Config */
+		vdd_2v8-supply = <&pm8150_l17>;
+		vdd_2v8_volt = <3008000>;
+		//enable1v8_gpio = <&tlmm 119 0x00>;
+
+		/* Other HW Resource */
+		irq-gpio = <&tlmm 122 0x2008>;
+		reset-gpio = <&tlmm 54 0x00>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&tp_1v8_active &tp_irq_active &tp_rst_active>;
+
+		touchpanel,max-num-support = <10>;
+		touchpanel,tx-rx-num = <17 37>;
+		touchpanel,panel-coords = <1439 3119>;
+		touchpanel,display-coords = <1439 3119>;
+		touchpanel,touchmajor-limit = <32 54>;
+
+		tp_type = <8>;// type of tp_dev ,TP-SAMSUNG = 8;
+		platform_support_project = <18821 19801>;
+		platform_support_project_dir = <18821 19801>;
+		platform_support_project_commandline = "default_commandline", "default_commandline";
+
+		/* SW Support Feature Control */
+		black_gesture_support;
+		fw_edge_limit_support;
+		charger_pump_support;
+		fw_update_app_support;
+		smart_gesture_support;
+		game_switch_support;
+		fingerprint_underscreen_support;
+		old_firmware_flag_check; /*for old lsi project*/
+		single_tap_support;
+
+		/*
+		 *Virtual Key Config:
+		 *1:touchpanel,button-type: <virtualkey_type  supportted_button-map>
+		 *virtualkey_type:
+		 *Type 1: using board_properties
+		 *Type 2: using same IC (button zone&& touch zone are seprate)
+		 *Type 3: using diffrent IC (button zone&& touch zone are seprate)
+		 *Type 4: No need of virtual key process
+		 *supportted_button-map:select|menu|home|back
+		 *
+		 *2:touchpanel,button-map
+		 *type (X1,Y1)(X2,Y2)(X3,Y3)(Width_X,Hight_Y)--Only when button-type is 0
+		 */
+
+		touchpanel,button-type = <4>;
+		touchpanel.button-TRx = <0 0>;
+	};
+};
+
+&tlmm {
+	tri_state_key_active: tri_state_key_active {
+		mux {
+			pins = "gpio125", "gpio134", "gpio27";
+			function = "gpio";
+		};
+		config {
+			pins = "gpio125", "gpio134", "gpio27";
+			drive-strength = <2>;
+			bias-disable;
+		};
+	};
+
+	tri_state_key_suspend: tri_state_key_suspend {
+		mux {
+			pins = "gpio125", "gpio134", "gpio27";
+			function = "gpio";
+		};
+		config {
+			pins = "gpio125", "gpio134", "gpio27";
+			drive-strength = <2>;
+			bias-disable;
+		};
+	};
+};
