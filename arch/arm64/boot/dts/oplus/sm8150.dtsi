@@ -170,6 +170,10 @@
 };
 
 /* sm8150-regulator.dtsi */
+&L2F {
+	regulator-min-microvolt = <1000000>;
+};
+
 &soc {
 	/* RPMh regulators: */
 	rpmh-regulator-ldof1 {
@@ -184,17 +188,8 @@
 		};
 	};
 
-	/delete-node/ rpmh-regulator-ldof2;
 	rpmh-regulator-ldof2 {
 		compatible = "qcom,rpmh-vrm-regulator";
-		mboxes = <&apps_rsc 0>;
-		qcom,resource-name = "ldof2";
-		L2F: pm8009_l2: regulator-pm8009-l2 {
-			regulator-name = "pm8009_l2";
-			qcom,set = <RPMH_REGULATOR_SET_ALL>;
-			regulator-min-microvolt = <1000000>;
-			regulator-max-microvolt = <1200000>;
-		};
 	};
 
 	rpmh-regulator-ldof3 {
