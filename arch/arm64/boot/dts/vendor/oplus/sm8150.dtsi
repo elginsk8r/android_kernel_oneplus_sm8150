@@ -1,4 +1,4 @@
-#include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+#include <dt-bindings/regulator/qcom,rpmh-regulator-levels.h>
 
 / {
 	oplus,dtsi_no = <18821 18857 18865 19801 19863>;
