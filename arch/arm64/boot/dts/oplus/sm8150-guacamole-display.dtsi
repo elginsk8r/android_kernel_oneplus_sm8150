@@ -4,35 +4,6 @@
 #include "dsi-panel-samsung_sofef03f_m_fhd_dsc_cmd.dtsi"
 #include <dt-bindings/clock/mdss-7nm-pll-clk.h>
 
-&soc {
-	dsi_samsung_oneplus_dsc_cmd_display: qcom,dsi-display@23 {
-		label = "dsi_samsung_oneplus_dsc_cmd_display";
-		qcom,display-type = "primary";
-		qcom,dsi-ctrl-num = <0>;
-		qcom,dsi-phy-num = <0>;
-		qcom,dsi-select-clocks = "mux_byte_clk0", "mux_pixel_clk0";
-		qcom,dsi-panel = <&dsi_samsung_oneplus_dsc_cmd>;
-	};
-
-	dsi_samsung_s6e3fc2x01_cmd_display: qcom,dsi-display@24 {
-		label = "dsi_samsung_s6e3fc2x01_cmd_display";
-		qcom,display-type = "primary";
-		qcom,dsi-ctrl-num = <0>;
-		qcom,dsi-phy-num = <0>;
-		qcom,dsi-select-clocks = "mux_byte_clk0", "mux_pixel_clk0";
-		qcom,dsi-panel = <&dsi_samsung_s6e3fc2x01_cmd>;
-	};
-
-	dsi_samsung_sofef03f_m_fhd_dsc_cmd_display: qcom,dsi-display@25 {
-		label = "dsi_samsung_sofef03f_m_fhd_dsc_cmd_display";
-		qcom,display-type = "primary";
-		qcom,dsi-ctrl-num = <0>;
-		qcom,dsi-phy-num = <0>;
-		qcom,dsi-select-clocks = "mux_byte_clk0", "mux_pixel_clk0";
-		qcom,dsi-panel = <&dsi_samsung_sofef03f_m_fhd_dsc_cmd>;
-	};
-};
-
 &mdss_dsi_phy0 {
 	qcom,panel-allow-phy-poweroff;
 };
@@ -44,10 +15,6 @@
 	/delete-property/ lab-supply;
 	/delete-property/ ibb-supply;
 	/delete-property/ vdd-supply;
-	qcom,dsi-display-list =
-		<&dsi_samsung_oneplus_dsc_cmd_display
-		 &dsi_samsung_s6e3fc2x01_cmd_display
-		 &dsi_samsung_sofef03f_m_fhd_dsc_cmd_display>;
 };
 
 &sde_dp {
@@ -107,6 +74,7 @@
 		<10 0xe7>, <20 0xdf>, <30 0xd8>, <45 0xd0>, <70 0xc5>,
 		<100 0xb9>, <150 0xaf>, <227 0x99>, <300 0x88>, <400 0x76>,
 		<500 0x66>, <600 0x59>, <800 0x42>, <1023 0x2a>;
+	qcom,dsi-select-clocks = "mux_byte_clk0", "mux_pixel_clk0";
 	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
 	qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_dcs";
 	qcom,mdss-dsi-bl-min-level = <1>;
@@ -168,6 +136,7 @@
 		<10 0xe7>, <20 0xdf>, <30 0xd8>, <45 0xd0>, <70 0xc5>,
 		<100 0xb9>, <150 0xaf>, <227 0x99>, <300 0x88>, <400 0x76>,
 		<500 0x66>, <600 0x59>, <800 0x42>, <1023 0x2a>;
+	qcom,dsi-select-clocks = "mux_byte_clk0", "mux_pixel_clk0";
 	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
 	qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_dcs";
 	qcom,mdss-dsi-bl-min-level = <1>;
@@ -199,6 +168,7 @@
 		<10 225>, <20 215>, <30 208>, <45 197>, <70 184>,
 		<100 175>, <150 160>, <227 142>, <300 128>, <400 115>,
 		<500 100>, <600 82>, <800 66>, <1023 30>;
+	qcom,dsi-select-clocks = "mux_byte_clk0", "mux_pixel_clk0";
 	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
 	qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_dcs";
 	qcom,mdss-dsi-bl-min-level = <1>;
