@@ -2,10 +2,8 @@
 #include "sm8150-guacamole-common.dtsi"
 #include "sm8150-camera-sensor-guacamole.dtsi"
 
-&soc {
-	dsi_samsung_oneplus_dsc_cmd_display {
-		qcom,dsi-display-active;
-	};
+&sde_dsi {
+	qcom,dsi-default-panel = <&dsi_samsung_oneplus_dsc_cmd>;
 };
 
 &goodix_optical {
