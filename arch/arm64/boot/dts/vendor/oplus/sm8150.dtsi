@@ -174,11 +174,10 @@
 	regulator-min-microvolt = <1000000>;
 };
 
-&soc {
+&apps_rsc {
 	/* RPMh regulators: */
 	rpmh-regulator-ldof1 {
 		compatible = "qcom,rpmh-vrm-regulator";
-		mboxes = <&apps_rsc 0>;
 		qcom,resource-name = "ldof1";
 		L1F: pm8009_l1: regulator-pm8009-l1 {
 			regulator-name = "pm8009_l1";
@@ -194,7 +193,6 @@
 
 	rpmh-regulator-ldof3 {
 		compatible = "qcom,rpmh-vrm-regulator";
-		mboxes = <&apps_rsc 0>;
 		qcom,resource-name = "ldof3";
 		L3F: pm8009_l3: regulator-pm8009-l3 {
 			regulator-name = "pm8009_l3";
@@ -206,7 +204,6 @@
 
 	rpmh-regulator-ldof4 {
 		compatible = "qcom,rpmh-vrm-regulator";
-		mboxes = <&apps_rsc 0>;
 		qcom,resource-name = "ldof4";
 		L4F: pm8009_l4: regulator-pm8009-l4 {
 			regulator-name = "pm8009_l4";
@@ -218,7 +215,6 @@
 
 	rpmh-regulator-ldof7 {
 		compatible = "qcom,rpmh-xob-regulator";
-		mboxes = <&apps_rsc 0>;
 		qcom,resource-name = "ldof7";
 		L7F: pm8009_l7: regulator-pm8009-l7 {
 			regulator-name = "pm8009_l7";
