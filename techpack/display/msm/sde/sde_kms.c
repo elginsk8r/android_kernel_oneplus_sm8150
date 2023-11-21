@@ -50,6 +50,9 @@
 #include "sde_crtc.h"
 #include "sde_reg_dma.h"
 #include "sde_connector.h"
+#ifdef OPLUS_BUG_STABILITY
+#include "oplus_display_private_api.h"
+#endif /* OPLUS_BUG_STABILITY */
 
 #include <soc/qcom/scm.h>
 #include "soc/qcom/secure_buffer.h"
@@ -1424,7 +1427,11 @@ static int _sde_kms_setup_displays(struct drm_device *dev,
 		.soft_reset   = dsi_display_soft_reset,
 		.pre_kickoff  = dsi_conn_pre_kickoff,
 		.clk_ctrl = dsi_display_clk_ctrl,
+#ifdef OPLUS_BUG_STABILITY
+		.set_power = dsi_display_oplus_set_power,
+#else
 		.set_power = dsi_display_set_power,
+#endif /* OPLUS_BUG_STABILITY */
 		.get_mode_info = dsi_conn_get_mode_info,
 		.get_dst_format = dsi_display_get_dst_format,
 		.post_kickoff = dsi_conn_post_kickoff,
