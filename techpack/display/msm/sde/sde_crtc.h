@@ -439,6 +439,13 @@ struct sde_crtc_state {
 
 	struct sde_core_perf_params new_perf;
 	int secure_session;
+
+#ifdef OPLUS_BUG_STABILITY
+	bool fingerprint_mode;
+	bool fingerprint_pressed;
+	bool fingerprint_defer_sync;
+	struct sde_hw_dim_layer *fingerprint_dim_layer;
+#endif /* OPLUS_BUG_STABILITY */
 };
 
 enum sde_crtc_irq_state {
@@ -901,5 +908,9 @@ static inline void sde_crtc_set_compression_ratio(
 end:
 	SDE_DEBUG("sde_crtc comp ratio: %d\n", sde_crtc->comp_ratio);
 }
+
+#ifdef OPLUS_BUG_STABILITY
+struct sde_kms *_sde_crtc_get_kms_(struct drm_crtc *crtc);
+#endif /* OPLUS_BUG_STABILITY */
 
 #endif /* _SDE_CRTC_H_ */
