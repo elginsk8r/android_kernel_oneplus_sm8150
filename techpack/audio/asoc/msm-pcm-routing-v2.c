@@ -33,6 +33,11 @@
 #include <dsp/q6common.h>
 #include <dsp/audio_cal_utils.h>
 
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+#include <dsp/apr_elliptic.h>
+#include <elliptic/elliptic_mixer_controls.h>
+#endif
+
 #include "msm-pcm-routing-v2.h"
 #include "msm-pcm-routing-devdep.h"
 #include "msm-qti-pp-config.h"
@@ -6134,6 +6139,12 @@ static const struct snd_kcontrol_new slimbus_2_rx_mixer_controls[] = {
 	MSM_BACKEND_DAI_SLIMBUS_2_RX,
 	MSM_FRONTEND_DAI_MULTIMEDIA26, 1, 0, msm_routing_get_audio_mixer,
 	msm_routing_put_audio_mixer),
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+	SOC_DOUBLE_EXT("Ultrasound", SND_SOC_NOPM,
+	MSM_BACKEND_DAI_SLIMBUS_2_RX,
+	MSM_FRONTEND_DAI_ULTRASOUND, 1, 0, msm_routing_get_audio_mixer,
+	msm_routing_put_audio_mixer),
+#endif /* OPLUS_FEATURE_MM_ULTRASOUND */
 };
 
 static const struct snd_kcontrol_new slimbus_5_rx_mixer_controls[] = {
@@ -6709,6 +6720,12 @@ static const struct snd_kcontrol_new quaternary_mi2s_rx_mixer_controls[] = {
 	MSM_BACKEND_DAI_QUATERNARY_MI2S_RX,
 	MSM_FRONTEND_DAI_MULTIMEDIA30, 1, 0, msm_routing_get_audio_mixer,
 	msm_routing_put_audio_mixer),
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+	SOC_DOUBLE_EXT("Ultrasound", SND_SOC_NOPM,
+	MSM_BACKEND_DAI_QUATERNARY_MI2S_RX,
+	MSM_FRONTEND_DAI_ULTRASOUND, 1, 0, msm_routing_get_audio_mixer,
+	msm_routing_put_audio_mixer),
+#endif /* OPLUS_FEATURE_MM_ULTRASOUND */
 };
 
 static const struct snd_kcontrol_new quinary_mi2s_rx_mixer_controls[] = {
@@ -7712,6 +7729,13 @@ static const struct snd_kcontrol_new quat_mi2s_rx_port_mixer_controls[] = {
 	MSM_BACKEND_DAI_QUATERNARY_MI2S_RX,
 	MSM_BACKEND_DAI_SLIMBUS_8_TX, 1, 0, msm_routing_get_port_mixer,
 	msm_routing_put_port_mixer),
+#ifdef OPLUS_FEATURE_KTV
+	/* GuoWang.Huang.MM.AudioDriver.Machine, 2019/12/27, Add for ktv */
+	SOC_DOUBLE_EXT("SLIM_1_TX_MMI", SND_SOC_NOPM,
+	MSM_BACKEND_DAI_QUATERNARY_MI2S_RX,
+	MSM_BACKEND_DAI_SLIMBUS_1_TX, 1, 0, msm_routing_get_port_mixer,
+	msm_routing_put_port_mixer),
+#endif /* OPLUS_FEATURE_KTV */
 };
 
 static const struct snd_kcontrol_new quin_mi2s_rx_port_mixer_controls[] = {
@@ -22220,6 +22244,13 @@ static const struct snd_kcontrol_new sbus_6_rx_port_mixer_controls[] = {
 	MSM_BACKEND_DAI_SLIMBUS_6_RX,
 	MSM_BACKEND_DAI_SLIMBUS_9_TX, 1, 0, msm_routing_get_port_mixer,
 	msm_routing_put_port_mixer),
+#ifdef OPLUS_FEATURE_KTV
+	/* GuoWang.Huang.MM.AudioDriver.Machine, 2019/12/27, Add for ktv */
+	 SOC_DOUBLE_EXT("SLIM_1_TX_MMI", SND_SOC_NOPM,
+	MSM_BACKEND_DAI_SLIMBUS_6_RX,
+	MSM_BACKEND_DAI_SLIMBUS_1_TX, 1, 0, msm_routing_get_port_mixer,
+	msm_routing_put_port_mixer),
+#endif /* OPLUS_FEATURE_KTV */
 };
 
 static const struct snd_kcontrol_new bt_sco_rx_port_mixer_controls[] = {
@@ -23158,6 +23189,54 @@ static int msm_routing_put_app_type_gain_control(struct snd_kcontrol *kcontrol,
 	mutex_unlock(&routing_lock);
 	return ret ? -EINVAL : 0;
 }
+
+#ifdef OPLUS_FEATURE_KTV
+static int audio_loopback_reverb_set_param(struct snd_kcontrol *kcontrol,
+		  struct snd_ctl_elem_value *ucontrol)
+{
+	  int i, j, fe_id, be_id, port_type;
+	  int ret = 0;
+	  unsigned long copp;
+	  int32_t params[20];
+	  struct msm_pcm_routing_bdai_data *bedai;
+
+	  for (i = 0; i < 20; i++) {
+		  params[i] = (int32_t)(ucontrol->value.integer.value[i]);
+	  }
+	  port_type =MSM_AFE_PORT_TYPE_TX;
+	  mutex_lock(&routing_lock);
+	  for (be_id = 0; be_id < MSM_BACKEND_DAI_MAX; be_id++) {
+		  if (is_be_dai_extproc(be_id))
+			  continue;
+
+		  bedai = &msm_bedais[be_id];
+		  if (afe_get_port_type(bedai->port_id) != port_type)
+			  continue;
+
+		  if (!bedai->active)
+			  continue;
+
+		  for (fe_id = 0; fe_id < MSM_FRONTEND_DAI_MAX; fe_id++) {
+			  if (!test_bit(fe_id, &bedai->fe_sessions[0]))
+				  continue;
+
+			  copp = session_copp_map[fe_id][MSM_AFE_PORT_TYPE_TX][be_id];
+			  for (j = 0; j < MAX_COPPS_PER_PORT; j++) {
+				  if (!test_bit(j, &copp))
+					  continue;
+				  ret |= adm_set_reverb_param(bedai->port_id, j, params);
+			  }
+		  }
+	  }
+	  mutex_unlock(&routing_lock);
+	  return ret ? -EINVAL : 0;
+}
+
+static const struct snd_kcontrol_new audio_loopback_reverb_controls[] = {
+	SOC_SINGLE_MULTI_EXT("AudioLoopback", SND_SOC_NOPM, 0,
+	0x100, 0, 20, NULL, audio_loopback_reverb_set_param)
+};
+#endif /* OPLUS_FEATURE_KTV */
 
 static const struct snd_kcontrol_new app_type_cfg_controls[] = {
 	SOC_SINGLE_MULTI_EXT("App Type Config", SND_SOC_NOPM, 0,
@@ -24352,6 +24431,12 @@ static const struct snd_soc_dapm_widget msm_qdsp6_widgets[] = {
 		0, 0, 0, 0),
 	SND_SOC_DAPM_AIF_OUT("SLIM1_UL_HL", "SLIMBUS1_HOSTLESS Capture",
 		0, 0, 0, 0),
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+	SND_SOC_DAPM_AIF_IN("SLIM2_DL_HL", "SLIMBUS2_HOSTLESS Playback",
+		0, 0, 0, 0),
+	SND_SOC_DAPM_AIF_OUT("SLIM2_UL_HL", "SLIMBUS2_HOSTLESS Capture",
+		0, 0, 0, 0),
+#endif /* OPLUS_FEATURE_MM_ULTRASOUND */
 	SND_SOC_DAPM_AIF_IN("SLIM3_DL_HL", "SLIMBUS3_HOSTLESS Playback",
 		0, 0, 0, 0),
 	SND_SOC_DAPM_AIF_OUT("SLIM3_UL_HL", "SLIMBUS3_HOSTLESS Capture",
@@ -29887,6 +29972,12 @@ static const struct snd_soc_dapm_route intercon_mi2s[] = {
 	{"MI2S_RX Audio Mixer", "MultiMedia15", "MM_DL15"},
 	{"MI2S_RX Audio Mixer", "MultiMedia16", "MM_DL16"},
 	{"MI2S_RX Audio Mixer", "MultiMedia26", "MM_DL26"},
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+	{"QUAT_MI2S_RX Audio Mixer", "Ultrasound", "QUAT_MI2S_DL_HL"},
+#endif /* OPLUS_FEATURE_MM_ULTRASOUND */
+#if OPLUS_FEATURE_KTV
+	{"QUAT_MI2S_RX Port Mixer", "SLIM_1_TX_MMI", "SLIMBUS_1_TX"},
+#endif /* OPLUS_FEATURE_KTV */
 	{"MI2S_RX", NULL, "MI2S_RX Audio Mixer"},
 
 	{"QUAT_MI2S_RX Audio Mixer", "MultiMedia1", "MM_DL1"},
@@ -30365,10 +30456,17 @@ static const struct snd_soc_dapm_route intercon_mi2s[] = {
 	{"SLIMBUS_0_RX Port Mixer", "QUIN_MI2S_TX", "QUIN_MI2S_TX"},
 	{"SLIMBUS_0_RX Port Mixer", "SENARY_MI2S_TX", "SENARY_MI2S_TX"},
 
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+	{"SLIMBUS_2_RX Audio Mixer", "Ultrasound", "SLIM2_DL_HL"},
+#endif /* OPLUS_FEATURE_MM_ULTRASOUND */
+
 	{"SLIMBUS_6_RX Port Mixer", "MI2S_TX", "MI2S_TX"},
 	{"SLIMBUS_6_RX Port Mixer", "PRI_MI2S_TX", "PRI_MI2S_TX"},
 	{"SLIMBUS_6_RX Port Mixer", "TERT_MI2S_TX", "TERT_MI2S_TX"},
 	{"SLIMBUS_6_RX Port Mixer", "QUAT_MI2S_TX", "QUAT_MI2S_TX"},
+#if OPLUS_FEATURE_KTV
+	{"SLIMBUS_6_RX Port Mixer", "SLIM_1_TX_MMI", "SLIMBUS_1_TX"},
+#endif /* OPLUS_FEATURE_KTV */
 
 	{"INT0_MI2S_RX_DL_HL", "Switch", "INT4_MI2S_DL_HL"},
 	{"INT0_MI2S_RX", NULL, "INT0_MI2S_RX_DL_HL"},
@@ -31536,6 +31634,11 @@ static int msm_routing_probe(struct snd_soc_component *component)
 	snd_soc_add_component_controls(component, app_type_cfg_controls,
 				      ARRAY_SIZE(app_type_cfg_controls));
 
+#ifdef OPLUS_FEATURE_KTV
+	snd_soc_add_component_controls(component, audio_loopback_reverb_controls,
+				      ARRAY_SIZE(audio_loopback_reverb_controls));
+#endif /* OPLUS_FEATURE_KTV */
+
 	snd_soc_add_component_controls(component, lsm_app_type_cfg_controls,
 				      ARRAY_SIZE(lsm_app_type_cfg_controls));
 
@@ -31601,6 +31704,10 @@ static int msm_routing_probe(struct snd_soc_component *component)
 				      ARRAY_SIZE(pll_clk_drift_controls));
 	snd_soc_add_component_controls(component, mclk_src_controls,
 				      ARRAY_SIZE(mclk_src_controls));
+
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+	elliptic_add_platform_controls(component);
+#endif
 
 	return 0;
 }
