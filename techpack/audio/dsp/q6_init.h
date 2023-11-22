@@ -20,6 +20,10 @@ int avtimer_init(void);
 int msm_mdf_init(void);
 void msm_mdf_exit(void);
 #else
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+int elliptic_driver_init(void);
+#endif
+
 static inline int msm_mdf_init(void)
 {
 	return 0;
@@ -65,6 +69,9 @@ static inline int audio_slimslave_init(void)
 static inline void audio_slimslave_exit(void)
 {
 };
+#endif
+#ifdef OPLUS_FEATURE_MM_ULTRASOUND
+int elliptic_driver_exit(void);
 #endif
 #ifdef CONFIG_VOICE_MHI
 int voice_mhi_init(void);
