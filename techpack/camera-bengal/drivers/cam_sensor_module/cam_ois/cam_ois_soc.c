@@ -112,6 +112,20 @@ int cam_ois_driver_soc_init(struct cam_ois_ctrl_t *o_ctrl)
 		o_ctrl->io_master_info.cci_client->cci_device = o_ctrl->cci_num;
 		CAM_DBG(CAM_OIS, "cci-device %d", o_ctrl->cci_num, rc);
 
+		if (of_property_read_u8(of_node, "ois_gyro,id",
+				&o_ctrl->ois_gyro_id) < 0) {
+			/* Set default ois_gyro_id 1 */
+			o_ctrl->ois_gyro_id = 1;
+		}
+		CAM_DBG(CAM_OIS, "ois_gyro_id: %d", o_ctrl->ois_gyro_id);
+
+		if (of_property_read_u8(of_node, "master_cci,id",
+				&o_ctrl->cci_master_id) < 0) {
+			/* Set default cci_master_id 1 */
+			o_ctrl->cci_master_id = 1;
+		}
+		CAM_DBG(CAM_OIS,"cci_master_id: %d", o_ctrl->cci_master_id);
+
 	}
 
 	rc = cam_ois_get_dt_data(o_ctrl);
