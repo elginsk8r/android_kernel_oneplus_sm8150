@@ -13,6 +13,10 @@ ifeq ($(CONFIG_ARCH_LITO), y)
 include $(srctree)/techpack/camera/config/litocamera.conf
 endif
 
+ifeq ($(CONFIG_OPLUS_SYSTEM_KERNEL), y)
+include $(srctree)/techpack/camera/config/opluscamera.conf
+endif
+
 ifeq ($(CONFIG_ARCH_SM8150), y)
 LINUXINCLUDE    += \
 		-include $(srctree)/techpack/camera/config/sm8150cameraconf.h
@@ -26,6 +30,11 @@ endif
 ifeq ($(CONFIG_ARCH_LITO), y)
 LINUXINCLUDE    += \
 		-include $(srctree)/techpack/camera/config/litocameraconf.h
+endif
+
+ifeq ($(CONFIG_OPLUS_SYSTEM_KERNEL), y)
+LINUXINCLUDE    += \
+		-include $(srctree)/techpack/camera/config/opluscameraconf.h
 endif
 
 ifdef CONFIG_SPECTRA_CAMERA_KONA

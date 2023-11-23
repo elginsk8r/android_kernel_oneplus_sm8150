@@ -119,18 +119,13 @@ int cam_cci_init(struct v4l2_subdev *sd,
 		return rc;
 	}
 
-	if (cci_dev->ref_count++) {
-		rc = cam_cci_init_master(cci_dev, master);
-		if (rc) {
-			CAM_ERR(CAM_CCI, "Failed to init: Master: %d: rc: %d",
-				master, rc);
-			cci_dev->ref_count--;
-		}
-		CAM_DBG(CAM_CCI, "ref_count %d, master: %d",
-			cci_dev->ref_count, master);
-		return rc;
+	if ((cci_dev->ref_count) &&
+		(cci_dev->cci_state == CCI_STATE_ENABLED)) {
+		cci_dev->ref_count++;
+		return 0;
 	}
 
+	cci_dev->ref_count++;
 	ahb_vote.type = CAM_VOTE_ABSOLUTE;
 	ahb_vote.vote.level = CAM_LOWSVS_VOTE;
 	axi_vote.num_paths = 1;

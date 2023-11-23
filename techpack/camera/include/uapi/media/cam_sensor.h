@@ -486,4 +486,14 @@ struct cam_flash_query_cap_info {
 	uint32_t    max_current_torch[CAM_FLASH_MAX_LED_TRIGGERS];
 } __attribute__ ((packed));
 
+#define FD_DFCT_MAX_NUM 5
+#define SG_DFCT_MAX_NUM 299
+
+struct sony_dfct_tbl_t {
+	int sg_dfct_num;
+	int sg_dfct_addr[SG_DFCT_MAX_NUM];
+	int fd_dfct_num;
+	int fd_dfct_addr[FD_DFCT_MAX_NUM];
+} __attribute__ ((packed));
+
 #endif

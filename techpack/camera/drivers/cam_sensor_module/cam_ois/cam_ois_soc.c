@@ -83,6 +83,7 @@ int cam_ois_driver_soc_init(struct cam_ois_ctrl_t *o_ctrl)
 	struct cam_hw_soc_info         *soc_info = &o_ctrl->soc_info;
 	struct device_node             *of_node = NULL;
 	struct device_node             *of_parent = NULL;
+	int                             id;
 
 	if (!soc_info->dev) {
 		CAM_ERR(CAM_OIS, "soc_info is not initialized");
@@ -117,6 +118,21 @@ int cam_ois_driver_soc_init(struct cam_ois_ctrl_t *o_ctrl)
 	rc = cam_ois_get_dt_data(o_ctrl);
 	if (rc < 0)
 		CAM_DBG(CAM_OIS, "failed: ois get dt data rc %d", rc);
+
+	rc = of_property_read_u32(of_node, "ois_gyro,id", &id);
+	if (rc < 0) {
+	    o_ctrl->ois_gyro_id = 1;
+	} else {
+	    o_ctrl->ois_gyro_id = (uint8_t)id;
+	}
+	CAM_DBG(CAM_OIS, "ois_gyro %d", o_ctrl->ois_gyro_id);
+
+	if (of_property_read_u32(of_node, "master_cci,id", &id) < 0) {
+		o_ctrl->cci_master_id = 1;
+	} else {
+		o_ctrl->cci_master_id = (uint8_t)id;
+	}
+	CAM_DBG(CAM_OIS, "cci_master_id %d", o_ctrl->cci_master_id);
 
 	return rc;
 }
