@@ -5,3 +5,4 @@
 
 #define CONFIG_SPECTRA_CAMERA_BENGAL 1
 #define CONFIG_SPECTRA_CAMERA      1
+#define CONFIG_STMVL53L1           1
