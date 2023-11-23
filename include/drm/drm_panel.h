@@ -33,6 +33,8 @@
 #define DRM_PANEL_EVENT_BLANK		0x01
 /* A hardware display blank early change occurred */
 #define DRM_PANEL_EARLY_EVENT_BLANK	0x02
+/* event for onscreenfingerprint scene */
+#define DRM_PANEL_ONSCREENFINGERPRINT_EVENT	0x10
 
 enum {
 	/* panel: power on */
