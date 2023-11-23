@@ -1,0 +1,28 @@
+ccflags-y += -I$(srctree)/techpack/camera-bengal/drivers/vl53l1/inc
+ccflags-y += -I$(srctree)/techpack/camera-bengal/drivers/vl53l1/ipp
+ccflags-y += -I$(srctree)/techpack/camera-bengal/drivers/vl53l1
+ccflags-y += -I$(srctree)/techpack/camera-bengal/drivers/cam_sensor_module/cam_cci
+
+# define this environment variable if you want to compile driver for an old
+# kernel
+ifdef OLD_NETLINK_API
+ccflags-y	+= -DOLD_NETLINK_API
+endif
+
+ifdef VL53L1_LOG_ENABLE
+ccflags-y	+= -DVL53L1_LOG_ENABLE
+endif
+
+stmvl53l1-objs := stmvl53l1_module.o stmvl53l1_module-i2c.o stmvl53l1_module-cci.o
+stmvl53l1-objs += stmvl53l1_i2c.o stmvl53l1_ipp_nl.o stmvl53l1_log.o
+stmvl53l1-objs += src/vl53l1_api.o src/vl53l1_api_core.o
+stmvl53l1-objs += src/vl53l1_api_strings.o src/vl53l1_error_strings.o
+stmvl53l1-objs += src/vl53l1_core.o src/vl53l1_register_funcs.o
+stmvl53l1-objs += src/vl53l1_api_preset_modes.o
+stmvl53l1-objs += src/vl53l1_api_calibration.o
+stmvl53l1-objs += src/vl53l1_silicon_core.o
+stmvl53l1-objs += src/vl53l1_zone_presets.o src/vl53l1_nvm.o
+stmvl53l1-objs += src/vl53l1_api_debug.o src/vl53l1_core_support.o
+stmvl53l1-objs += src/vl53l1_wait.o ipp/ipp_linux.o
+stmvl53l1-objs += src/vl53l1_nvm_debug.o
+obj-$(CONFIG_STMVL53L1)	+= stmvl53l1.o

@@ -13,3 +13,4 @@ obj-$(CONFIG_SPECTRA_CAMERA_FD)   += cam_fd/
 obj-$(CONFIG_SPECTRA_CAMERA_LRME) += cam_lrme/
 obj-$(CONFIG_SPECTRA_CAMERA_CUST) += cam_cust/
 obj-$(CONFIG_SPECTRA_CAMERA_OPE)  += cam_ope/
+obj-$(CONFIG_STMVL53L1)           += vl53l1/
