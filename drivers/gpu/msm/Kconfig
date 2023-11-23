@@ -26,3 +26,10 @@ config QCOM_ADRENO_DEFAULT_GOVERNOR
 config QCOM_KGSL_IOMMU
 	bool
 	default y if QCOM_KGSL && (MSM_IOMMU || ARM_SMMU)
+
+config DRM_OPLUS_NOTIFY
+	bool "OPLUS DRM notifier"
+	default n
+	help
+	  Say 'Y' here to enable OPLUS DRM notifier.
+	  If in doubt, say "N".
