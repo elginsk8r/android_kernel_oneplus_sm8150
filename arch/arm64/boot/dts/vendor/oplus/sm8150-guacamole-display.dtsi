@@ -2,7 +2,6 @@
 #include "dsi-panel-samsung_oneplus_dsc.dtsi"
 #include "dsi-panel-samsung_s6e3fc2x01.dtsi"
 #include "dsi-panel-samsung_sofef03f_m_fhd_dsc_cmd.dtsi"
-#include "dsi-panel-samsung_sofef00_m_video.dtsi"
 #include <dt-bindings/clock/mdss-7nm-pll-clk.h>
 
 &mdss_dsi_phy0 {
@@ -201,26 +200,6 @@
 			qcom,default-topology-index = <1>;
 			qcom,panel-roi-alignment = <540 30 540 30 540 30>;
 			qcom,partial-update-enabled = "single_roi";
-		};
-	};
-};
-
-&dsi_samsung_sofef00_m_video {
-	qcom,dsi-select-clocks = "mux_byte_clk0", "mux_pixel_clk0";
-	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
-	qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_dcs";
-	qcom,mdss-dsi-bl-min-level = <1>;
-	qcom,mdss-dsi-bl-max-level = <1023>;
-	qcom,platform-te-gpio = <&tlmm 8 0>;
-	qcom,platform-reset-gpio = <&tlmm 6 0>;
-	qcom,platform-reset-gpio-tmo = <&tlmm 78 0>;
-	qcom,ulps-enabled;
-	qcom,mdss-dsi-display-timings {
-		timing@0{
-			qcom,mdss-dsi-panel-phy-timings = [00 20 07 07 0c 12 06
-				08 06 03 04 00];
-			qcom,display-topology = <1 0 1>;
-			qcom,default-topology-index = <0>;
 		};
 	};
 };
