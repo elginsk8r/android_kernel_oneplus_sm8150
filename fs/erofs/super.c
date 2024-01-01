@@ -66,8 +66,9 @@ static struct inode *erofs_alloc_inode(struct super_block *sb)
 	return &vi->vfs_inode;
 }
 
-static void erofs_free_inode(struct inode *inode)
+static void i_callback(struct rcu_head *head)
 {
+	struct inode *inode = container_of(head, struct inode, i_rcu);
 	struct erofs_inode *vi = EROFS_I(inode);
 
 	/* be careful of RCU symlink path */
@@ -76,6 +77,11 @@ static void erofs_free_inode(struct inode *inode)
 	kfree(vi->xattr_shared_xattrs);
 
 	kmem_cache_free(erofs_inode_cachep, vi);
+}
+
+static void destroy_inode(struct inode *inode)
+{
+	call_rcu(&inode->i_rcu, i_callback);
 }
 
 static bool check_layout_compatibility(struct super_block *sb,
@@ -393,7 +399,8 @@ static int erofs_fill_super(struct super_block *sb, void *data, int silent)
 		sb->s_flags &= ~SB_POSIXACL;
 
 #ifdef CONFIG_EROFS_FS_ZIP
-	INIT_RADIX_TREE(&sbi->workstn_tree, GFP_ATOMIC);
+	INIT_RADIX_TREE(&sbi->workstn.tree, GFP_ATOMIC);
+	spin_lock_init(&sbi->workstn.lock);
 #endif
 
 	/* get the root inode */
@@ -600,7 +607,7 @@ out:
 const struct super_operations erofs_sops = {
 	.put_super = erofs_put_super,
 	.alloc_inode = erofs_alloc_inode,
-	.free_inode = erofs_free_inode,
+	.destroy_inode = destroy_inode,
 	.statfs = erofs_statfs,
 	.show_options = erofs_show_options,
 	.remount_fs = erofs_remount,

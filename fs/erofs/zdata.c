@@ -7,6 +7,7 @@
 #include "zdata.h"
 #include "compress.h"
 #include <linux/prefetch.h>
+#include <linux/mm_inline.h>
 
 #include <trace/events/erofs.h>
 
@@ -20,6 +21,8 @@
 enum z_erofs_cache_alloctype {
 	DONTALLOC,	/* don't allocate any cached pages */
 	DELAYEDALLOC,	/* delayed allocation (at the time of submitting io) */
+	TRYALLOC,	/* try to allocate or do in-place approach otherwise */
+			/* to prevent causing direct reclaim */
 };
 
 /*
@@ -171,6 +174,7 @@ static void preload_compressed_pages(struct z_erofs_collector *clt,
 	struct page **pages = clt->compressedpages;
 	pgoff_t index = pcl->obj.index + (pages - pcl->compressed_pages);
 	bool standalone = true;
+	gfp_t gfp = mapping_gfp_constraint(mc, GFP_KERNEL) & ~__GFP_DIRECT_RECLAIM;
 
 	if (clt->mode < COLLECT_PRIMARY_FOLLOWED)
 		return;
@@ -178,6 +182,7 @@ static void preload_compressed_pages(struct z_erofs_collector *clt,
 	for (; pages < pcl->compressed_pages + clusterpages; ++pages) {
 		struct page *page;
 		compressed_page_t t;
+		struct page *newpage = NULL;
 
 		/* the compressed page was loaded before */
 		if (READ_ONCE(*pages))
@@ -189,7 +194,21 @@ static void preload_compressed_pages(struct z_erofs_collector *clt,
 			t = tag_compressed_page_justfound(page);
 		} else if (type == DELAYEDALLOC) {
 			t = tagptr_init(compressed_page_t, PAGE_UNALLOCATED);
+		} else if (type == TRYALLOC) {
+			gfp |= __GFP_NOMEMALLOC | __GFP_NORETRY | __GFP_NOWARN;
+
+			if (!list_empty(pagepool)) {
+				newpage = lru_to_page(pagepool);
+				list_del(&newpage->lru);
+			} else {
+				newpage = alloc_page(gfp);
+			}
+			if (!newpage)
+				goto fallback_dontalloc;
+			newpage->mapping = Z_EROFS_MAPPING_PREALLOCATED;
+			t = tag_compressed_page_justfound(newpage);
 		} else {	/* DONTALLOC */
+fallback_dontalloc:
 			if (standalone)
 				clt->compressedpages = pages;
 			standalone = false;
@@ -199,8 +218,12 @@ static void preload_compressed_pages(struct z_erofs_collector *clt,
 		if (!cmpxchg_relaxed(pages, NULL, tagptr_cast_ptr(t)))
 			continue;
 
-		if (page)
+		if (page) {
 			put_page(page);
+		} else if (newpage) {
+			newpage->mapping = NULL;
+			list_add(&newpage->lru, pagepool);
+		}
 	}
 
 	if (standalone)		/* downgrade to PRIMARY_FOLLOWED_NOINPLACE */
@@ -345,9 +368,8 @@ static struct z_erofs_collection *cllookup(struct z_erofs_collector *clt,
 	struct z_erofs_pcluster *pcl;
 	struct z_erofs_collection *cl;
 	unsigned int length;
-	bool tag;
 
-	grp = erofs_find_workgroup(inode->i_sb, map->m_pa >> PAGE_SHIFT, &tag);
+	grp = erofs_find_workgroup(inode->i_sb, map->m_pa >> PAGE_SHIFT);
 	if (!grp)
 		return NULL;
 
@@ -438,7 +460,7 @@ static struct z_erofs_collection *clregister(struct z_erofs_collector *clt,
 	 */
 	mutex_trylock(&cl->lock);
 
-	err = erofs_register_workgroup(inode->i_sb, &pcl->obj, 0);
+	err = erofs_register_workgroup(inode->i_sb, &pcl->obj);
 	if (err) {
 		mutex_unlock(&cl->lock);
 		kmem_cache_free(pcluster_cachep, pcl);
@@ -621,7 +643,7 @@ restart_now:
 
 	/* preload all compressed pages (maybe downgrade role if necessary) */
 	if (should_alloc_managed_pages(fe, sbi->cache_strategy, map->m_la))
-		cache_strategy = DELAYEDALLOC;
+		cache_strategy = TRYALLOC;
 	else
 		cache_strategy = DONTALLOC;
 
@@ -722,10 +744,10 @@ static inline void z_erofs_vle_read_endio(struct bio *bio)
 {
 	struct erofs_sb_info *sbi = NULL;
 	blk_status_t err = bio->bi_status;
+	unsigned int i;
 	struct bio_vec *bvec;
-	struct bvec_iter_all iter_all;
 
-	bio_for_each_segment_all(bvec, bio, iter_all) {
+	bio_for_each_segment_all(bvec, bio, i) {
 		struct page *page = bvec->bv_page;
 		bool cachemngd = false;
 
@@ -1043,6 +1065,11 @@ repeat:
 		goto out;
 	}
 
+	if (mapping == Z_EROFS_MAPPING_PREALLOCATED) {
+		WRITE_ONCE(pcl->compressed_pages[nr], page);
+		goto out_to_managed_cache;
+	}
+
 	/*
 	 * unmanaged (file) pages are all locked solidly,
 	 * therefore it is impossible for `mapping' to be NULL.
@@ -1101,6 +1128,7 @@ out_allocpage:
 	}
 	if (nocache || !tocache)
 		goto out;
+out_to_managed_cache:
 	if (add_to_page_cache_lru(page, mc, index + nr, gfp)) {
 		page->mapping = Z_EROFS_MAPPING_STAGING;
 		goto out;
@@ -1322,8 +1350,8 @@ static void z_erofs_submit_and_unzip(struct super_block *sb,
 		return;
 
 	/* wait until all bios are completed */
-	wait_event(io[JQ_SUBMIT].u.wait,
-		   !atomic_read(&io[JQ_SUBMIT].pending_bios));
+	io_wait_event(io[JQ_SUBMIT].u.wait,
+		      !atomic_read(&io[JQ_SUBMIT].pending_bios));
 
 	/* let's synchronous decompression */
 	z_erofs_vle_unzip_all(sb, &io[JQ_SUBMIT], pagepool);

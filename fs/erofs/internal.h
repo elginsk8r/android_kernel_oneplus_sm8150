@@ -53,7 +53,10 @@ struct erofs_sb_info {
 	struct mutex umount_mutex;
 
 	/* the dedicated workstation for compression */
-	struct radix_tree_root workstn_tree;
+	struct {
+		struct radix_tree_root tree;
+		spinlock_t lock;
+	} workstn;
 
 	/* threshold for decompression synchronously */
 	unsigned int max_sync_decompress_pages;
@@ -96,6 +99,7 @@ struct erofs_sb_info {
 /* Mount flags set via mount options or defaults */
 #define EROFS_MOUNT_XATTR_USER		0x00000010
 #define EROFS_MOUNT_POSIX_ACL		0x00000020
+#define EROFS_MOUNT_LZ4ASM		0x01000000
 
 #define clear_opt(sbi, option)	((sbi)->mount_opt &= ~EROFS_MOUNT_##option)
 #define set_opt(sbi, option)	((sbi)->mount_opt |= EROFS_MOUNT_##option)
@@ -109,6 +113,9 @@ enum {
 };
 
 #define EROFS_LOCKED_MAGIC     (INT_MIN | 0xE0F510CCL)
+
+#define erofs_workstn_lock(sbi)         spin_lock(&(sbi)->workstn.lock)
+#define erofs_workstn_unlock(sbi)       spin_unlock(&(sbi)->workstn.lock)
 
 /* basic unit of the workstation of a super_block */
 struct erofs_workgroup {
@@ -402,9 +409,9 @@ static inline void *erofs_get_pcpubuf(unsigned int pagenr)
 #ifdef CONFIG_EROFS_FS_ZIP
 int erofs_workgroup_put(struct erofs_workgroup *grp);
 struct erofs_workgroup *erofs_find_workgroup(struct super_block *sb,
-					     pgoff_t index, bool *tag);
+					     pgoff_t index);
 int erofs_register_workgroup(struct super_block *sb,
-			     struct erofs_workgroup *grp, bool tag);
+			     struct erofs_workgroup *grp);
 void erofs_workgroup_free_rcu(struct erofs_workgroup *grp);
 void erofs_shrinker_register(struct super_block *sb);
 void erofs_shrinker_unregister(struct super_block *sb);
