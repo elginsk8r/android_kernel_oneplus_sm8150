@@ -36,7 +36,7 @@ typedef tagptr1_t compressed_page_t;
 
 static struct workqueue_struct *z_erofs_workqueue __read_mostly;
 static struct kmem_cache *pcluster_cachep __read_mostly;
-
+static void z_erofs_vle_unzip_wq(struct work_struct *work);
 void z_erofs_exit_zip_subsystem(void)
 {
 	destroy_workqueue(z_erofs_workqueue);
@@ -736,8 +736,12 @@ static void z_erofs_vle_unzip_kickoff(void *ptr, int bios)
 		return;
 	}
 
-	if (!atomic_add_return(bios, &io->pending_bios))
-		queue_work(z_erofs_workqueue, &io->u.work);
+	if (!atomic_add_return(bios, &io->pending_bios)){
+		if (in_atomic() || irqs_disabled())
+			queue_work(z_erofs_workqueue, &io->u.work);
+		else
+			z_erofs_vle_unzip_wq(&io->u.work);
+	}
 }
 
 static inline void z_erofs_vle_read_endio(struct bio *bio)
@@ -1373,7 +1377,7 @@ static int z_erofs_vle_normalaccess_readpage(struct file *file,
 	(void)z_erofs_collector_end(&f.clt);
 
 	/* if some compressed cluster ready, need submit them anyway */
-	z_erofs_submit_and_unzip(inode->i_sb, &f.clt, &pagepool, true);
+	z_erofs_submit_and_unzip(inode->i_sb, &f.clt, &pagepool, false);
 
 	if (err)
 		erofs_err(inode->i_sb, "failed to read, err [%d]", err);
@@ -1450,7 +1454,7 @@ static int z_erofs_vle_normalaccess_readpages(struct file *filp,
 
 	(void)z_erofs_collector_end(&f.clt);
 
-	z_erofs_submit_and_unzip(inode->i_sb, &f.clt, &pagepool, sync);
+	z_erofs_submit_and_unzip(inode->i_sb, &f.clt, &pagepool, false);
 
 	if (f.map.mpage)
 		put_page(f.map.mpage);

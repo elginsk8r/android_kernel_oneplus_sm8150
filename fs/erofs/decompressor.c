@@ -14,7 +14,11 @@
 
 #define LZ4_MAX_DISTANCE_PAGES	(DIV_ROUND_UP(LZ4_DISTANCE_MAX, PAGE_SIZE) + 1)
 #ifndef LZ4_DECOMPRESS_INPLACE_MARGIN
+#ifdef CONFIG_OPLUS_FEATURE_EROFS
+#define LZ4_DECOMPRESS_INPLACE_MARGIN(srcsize)  (((srcsize) >> 8) + 65)
+#else
 #define LZ4_DECOMPRESS_INPLACE_MARGIN(srcsize)  (((srcsize) >> 8) + 32)
+#endif
 #endif
 
 struct z_erofs_decompressor {
@@ -73,7 +77,7 @@ static int z_erofs_lz4_prepare_destpages(struct z_erofs_decompress_req *rq,
 			victim = availables[--top];
 			get_page(victim);
 		} else {
-			victim = erofs_allocpage(pagepool, GFP_KERNEL, false);
+			victim = erofs_allocpage(pagepool, GFP_KERNEL, true);
 			if (!victim)
 				return -ENOMEM;
 			victim->mapping = Z_EROFS_MAPPING_STAGING;
@@ -110,6 +114,9 @@ static void *generic_copy_inplace_data(struct z_erofs_decompress_req *rq,
 	return tmp;
 }
 
+int z_erofs_lz4_decompress_partial(const char *in, char *out,
+				   unsigned int inlen, unsigned int outlen,
+				   bool accel, bool dip);
 static int z_erofs_lz4_decompress(struct z_erofs_decompress_req *rq, u8 *out)
 {
 	unsigned int inputmargin, inlen;
@@ -156,10 +163,16 @@ static int z_erofs_lz4_decompress(struct z_erofs_decompress_req *rq, u8 *out)
 			copied = true;
 		}
 	}
-
+#ifdef CONFIG_OPLUS_FEATURE_EROFS
+	ret = z_erofs_lz4_decompress_partial(src + inputmargin, out,
+					inlen, rq->outputsize,
+					test_opt(EROFS_SB(rq->sb), LZ4ASM),
+					rq->inplace_io);
+#else
 	ret = LZ4_decompress_safe_partial(src + inputmargin, out,
 					  inlen, rq->outputsize,
 					  rq->outputsize);
+#endif
 	if (ret < 0) {
 		erofs_err(rq->sb, "failed to decompress, in[%u, %u] out[%u]",
 			  inlen, inputmargin, rq->outputsize);
