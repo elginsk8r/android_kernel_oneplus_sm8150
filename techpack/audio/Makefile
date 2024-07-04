@@ -1,5 +1,4 @@
 # auto-detect subdirs
-ifneq ($(CONFIG_ARCH_ATOLL), y)
 ifeq ($(CONFIG_ARCH_SDM845), y)
 include $(srctree)/techpack/audio/config/sdm845auto.conf
 export $(shell sed 's/=.*//' $(srctree)/techpack/audio/config/sdm845auto.conf)
@@ -80,6 +79,3 @@ obj-y += soc/
 obj-y += dsp/
 obj-y += ipc/
 obj-y += asoc/
-else
-obj-y += 4.0/
-endif

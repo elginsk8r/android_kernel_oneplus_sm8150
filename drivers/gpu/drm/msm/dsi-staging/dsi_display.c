@@ -7914,11 +7914,9 @@ int dsi_display_disable(struct dsi_display *display)
 			pr_err("[%s] failed to disable DSI panel, rc=%d\n",
 			       display->name, rc);
 
-		#ifdef OPLUS_BUG_STABILITY
 		set_oplus_display_scene(OPLUS_DISPLAY_NORMAL_SCENE);
 		msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK,
 							&notifier_data);
-		#endif /* OPLUS_BUG_STABILITY */
 	}
 
 	mutex_unlock(&display->display_lock);

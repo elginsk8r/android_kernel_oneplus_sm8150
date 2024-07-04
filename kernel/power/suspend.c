@@ -471,7 +471,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	}
 
 #ifdef OPLUS_FEATURE_TP_BASIC
- Enable_irqs:
+Enable_irqs:
 #endif /* OPLUS_FEATURE_TP_BASIC */
 	arch_suspend_enable_irqs();
 	BUG_ON(irqs_disabled());
