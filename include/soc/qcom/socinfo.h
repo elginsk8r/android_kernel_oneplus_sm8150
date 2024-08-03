@@ -107,6 +107,8 @@ enum socinfo_parttype {
 	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,msm8996")
 #define early_machine_is_msm8996_auto()	\
 	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,msm8996-cdp")
+#define early_machine_is_sm8150()	\
+	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,sm8150")
 #define early_machine_is_sa8155()	\
 	of_flat_dt_is_compatible(of_get_flat_dt_root(), "qcom,sa8155")
 #define early_machine_is_sa8155p()	\
