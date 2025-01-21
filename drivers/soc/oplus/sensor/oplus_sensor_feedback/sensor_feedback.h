@@ -19,14 +19,8 @@
 #include <linux/param.h>
 #include <linux/proc_fs.h>
 #include <linux/time.h>
-#ifdef CONFIG_DRM_MSM
 #include <linux/msm_drm_notify.h>
-#endif
-
-#ifdef CONFIG_FB
-#include <linux/fb.h>
 #include <linux/notifier.h>
-#endif
 
 #define THREAD_WAKEUP  0
 #define THREAD_SLEEP   1

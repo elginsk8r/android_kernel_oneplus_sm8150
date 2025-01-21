@@ -41,9 +41,7 @@
 #elif defined(USE_PLATFORM_BUS)
 #include <linux/platform_device.h>
 #endif
-#ifdef CONFIG_DRM_OPLUS_NOTIFY
 #include <linux/msm_drm_notify.h>
-#endif
 #include <soc/oplus/system/boot_mode.h>
 #include <linux/version.h>
 
@@ -679,10 +677,10 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
         return retval;
     }
 
-    if (evdata && evdata->data && val == FB_EARLY_EVENT_BLANK && gf_dev) {
+    if (evdata && evdata->data && val == MSM_DRM_EARLY_EVENT_BLANK && gf_dev) {
         blank = *(int *)(evdata->data);
         switch (blank) {
-            case FB_BLANK_POWERDOWN:
+            case MSM_DRM_BLANK_POWERDOWN:
                 if (gf_dev->device_available == 1) {
                     gf_dev->fb_black = 1;
 #if defined(GF_NETLINK_ENABLE)
@@ -696,7 +694,7 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 #endif
                 }
                 break;
-            case FB_BLANK_UNBLANK:
+            case MSM_DRM_BLANK_UNBLANK:
                 if (gf_dev->device_available == 1) {
                     gf_dev->fb_black = 0;
 #if defined(GF_NETLINK_ENABLE)
@@ -832,17 +830,10 @@ static int gf_probe(struct platform_device *pdev)
 #endif
 
     gf_dev->notifier = goodix_noti_block;
-#if defined(CONFIG_DRM_OPLUS_NOTIFY)
     status = msm_drm_register_client(&gf_dev->notifier);
     if (status == -1) {
         return status;
     }
-#elif defined(CONFIG_FB)
-    status = fb_register_client(&gf_dev->notifier);
-    if (status == -1) {
-        return status;
-    }
-#endif
     wake_lock_init(&fp_wakelock, WAKE_LOCK_SUSPEND, "fp_wakelock");
     wake_lock_init(&gf_cmd_wakelock, WAKE_LOCK_SUSPEND, "gf_cmd_wakelock");
     pr_err("register goodix_fp_ok\n");

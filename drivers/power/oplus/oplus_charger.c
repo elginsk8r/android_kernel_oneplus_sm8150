@@ -130,9 +130,7 @@ static void oplus_get_smooth_soc_switch(struct oplus_chg_chip *chip);
 static void oplus_chg_pd_config(struct oplus_chg_chip *chip);
 static void oplus_chg_qc_config(struct oplus_chg_chip *chip);
 static void oplus_chg_check_abnormal_adapter(int vbus_rising);
-#ifdef  CONFIG_FB
 static int fb_notifier_callback(struct notifier_block *nb, unsigned long event, void *data);
-#endif
 void oplus_chg_ui_soc_decimal_init(void);
 void oplus_chg_ui_soc_decimal_deinit(void);
 
@@ -2206,17 +2204,11 @@ int oplus_chg_init(struct oplus_chg_chip *chip)
 		goto power_psy_reg_failed;
 	}
 
-#ifdef CONFIG_FB
 	chip->chg_fb_notify.notifier_call = fb_notifier_callback;
-#ifdef CONFIG_DRM_MSM
 	rc = msm_drm_register_client(&chip->chg_fb_notify);
-#else
-	rc = fb_register_client(&chip->chg_fb_notify);
-#endif /*CONFIG_DRM_MSM*/
 	if (rc) {
 		pr_err("Unable to register chg_fb_notify: %d\n", rc);
 	}
-#endif
 
 	oplus_chg_debug_info_init();
 	init_proc_chg_log();
@@ -4657,8 +4649,6 @@ static bool oplus_chg_check_time_is_good(struct oplus_chg_chip *chip)
 	}
 }
 
-#ifdef CONFIG_FB
-#ifdef CONFIG_DRM_MSM
 static int fb_notifier_callback(struct notifier_block *nb,
 		unsigned long event, void *data)
 {
@@ -4686,31 +4676,6 @@ static int fb_notifier_callback(struct notifier_block *nb,
 	}
 	return 0;
 }
-#else
-static int fb_notifier_callback(struct notifier_block *nb,
-		unsigned long event, void *data)
-{
-	int blank;
-	struct fb_event *evdata = data;
-
-	if (!g_charger_chip) {
-		return 0;
-	}
-	if (evdata && evdata->data) {
-		if (event == FB_EVENT_BLANK) {
-			blank = *(int *)evdata->data;
-			if (blank == FB_BLANK_UNBLANK) {
-				g_charger_chip->led_on = true;
-				g_charger_chip->led_on_change = true;
-			} else if (blank == FB_BLANK_POWERDOWN) {
-				g_charger_chip->led_on = false;
-				g_charger_chip->led_on_change = true;
-			}
-		}
-	}
-	return 0;
-}
-#endif /* CONFIG_DRM_MSM */
 
 void oplus_chg_set_allow_switch_to_fastchg(bool allow)
 {
@@ -4727,19 +4692,6 @@ void oplus_chg_set_led_status(bool val)
 	/*Do nothing*/
 }
 EXPORT_SYMBOL(oplus_chg_set_led_status);
-#else
-void oplus_chg_set_led_status(bool val)
-{
-	charger_xlog_printk(CHG_LOG_CRTI, " val = %d\n", val);
-	if (!g_charger_chip) {
-		return;
-	} else {
-		g_charger_chip->led_on = val;
-		g_charger_chip->led_on_change = true;
-	}
-}
-EXPORT_SYMBOL(oplus_chg_set_led_status);
-#endif
 
 void oplus_chg_set_camera_status(bool val)
 {

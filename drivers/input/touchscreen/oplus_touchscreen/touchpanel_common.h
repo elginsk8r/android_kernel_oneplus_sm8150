@@ -23,6 +23,8 @@
 #include <linux/delay.h>
 #include <linux/jiffies.h>
 #include <linux/thermal.h>
+#include <linux/notifier.h>
+#include <linux/msm_drm_notify.h>
 
 #include "util_interface/touch_interfaces.h"
 #include "tp_devices.h"
@@ -910,9 +912,7 @@ struct touchpanel_data {
 #if defined(TPD_USE_EINT)
 	struct hrtimer         timer;                       /*using polling instead of IRQ*/
 #endif
-#if defined(CONFIG_FB) || defined(CONFIG_DRM_OPLUS_NOTIFY)
 	struct notifier_block fb_notif;                     /*register to control suspend/resume*/
-#endif
 	struct touchpanel_snr   snr;        /*snr data*/
 	struct exception_data    exception_data;			/*exception_data monitor data*/
 

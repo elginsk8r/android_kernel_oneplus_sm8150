@@ -35,9 +35,7 @@
 #include <linux/notifier.h>
 #include <linux/fb.h>
 #include <linux/sysfs.h>
-#ifdef CONFIG_DRM_OPLUS_NOTIFY
 #include <linux/msm_drm_notify.h>
-#endif
 #include <linux/platform_device.h>
 #include <linux/regulator/consumer.h>
 #include <linux/string.h>
@@ -1745,7 +1743,6 @@ static void oplus_motor_irq_monitor(struct oplus_motor_chip *chip)
 	}
 }
 
-#ifdef CONFIG_DRM_OPLUS_NOTIFY
 static int fb_notifier_callback(struct notifier_block *nb, unsigned long event,
 				void *data)
 {
@@ -1771,31 +1768,6 @@ static int fb_notifier_callback(struct notifier_block *nb, unsigned long event,
 
 	return 0;
 }
-#else
-static int fb_notifier_callback(struct notifier_block *nb, unsigned long event,
-				void *data)
-{
-	int blank;
-	struct fb_event *evdata = data;
-
-	if (!g_chip) {
-		return 0;
-	}
-
-	if (evdata && evdata->data) {
-		if (event == FB_EARLY_EVENT_BLANK) {
-			blank = *(int *)evdata->data;
-
-			if (blank == FB_BLANK_UNBLANK) {
-				MOTOR_LOG("blank %d event %ld\n", blank, event);
-				oplus_motor_set_power(WAKE_ACTIVE, MOTOR_POWER_IGNORE);
-			}
-		}
-	}
-
-	return 0;
-}
-#endif /*CONFIG_DRM_OPLUS_NOTIFY*/
 
 static ktime_t motor_cal_timer(int pwm, int speed)
 {
@@ -3933,11 +3905,7 @@ static int motor_platform_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&chip->down_work, manual_to_auto_down_work);
 
 	chip->fb_notify.notifier_call = fb_notifier_callback;
-#ifdef CONFIG_DRM_OPLUS_NOTIFY
 	msm_drm_register_client(&chip->fb_notify);
-#else
-	fb_register_client(&chip->fb_notify);
-#endif
 
 	chip->up_data_buf = kzalloc(MAX_BUF_LEN * (sizeof(uint8_t)), GFP_KERNEL);
 

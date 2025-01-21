@@ -33,9 +33,7 @@
 //#include <linux/jiffies.h>
 #include <linux/sched.h>
 #include <linux/jiffies.h>
-#ifdef CONFIG_DRM_OPLUS_NOTIFY
 #include <linux/msm_drm_notify.h>
-#endif
 #include <linux/platform_device.h>
 #include <linux/regulator/consumer.h>
 #include <linux/version.h>
@@ -208,7 +206,6 @@ static void oneplus_motor_notify_state(unsigned long val)
     motor_notifier_call_chain(val);
 }
 
-#ifdef CONFIG_DRM_OPLUS_NOTIFY
 static int fb_notifier_callback(struct notifier_block* nb, unsigned long event, void* data)
 {
 	int blank;
@@ -236,31 +233,6 @@ static int fb_notifier_callback(struct notifier_block* nb, unsigned long event, 
 
 	return 0;
 }
-#else
-static int fb_notifier_callback(struct notifier_block* nb, unsigned long event, void* data)
-{
-	int blank;
-	struct fb_event* evdata = data;
-
-	if (g_the_chip == NULL) {
-		return 0;
-	}
-
-	if (evdata && evdata->data) {
-		if (event == FB_EVENT_BLANK) {
-			blank =* (int* )evdata->data;
-			if (blank == FB_BLANK_UNBLANK) {
-				g_the_chip->led_on = true;
-				MOTOR_LOG("led_on %d\n", g_the_chip->led_on);
-			} else if (blank == FB_BLANK_POWERDOWN) {
-				g_the_chip->led_on = false;
-				MOTOR_LOG("led_on %d\n", g_the_chip->led_on);
-			}
-		}
-	}
-	return 0;
-}
-#endif /*CONFIG_DRM_OPLUS_NOTIFY*/
 
 /*********************************************************************
 						 digital_hall control interface
@@ -3211,11 +3183,7 @@ static int motor_platform_probe(struct platform_device* pdev)
 	INIT_WORK(&chip->motor_work, motor_run_work);
 
 	chip->fb_notify.notifier_call = fb_notifier_callback;
-	#ifdef CONFIG_DRM_OPLUS_NOTIFY
 	msm_drm_register_client(&chip->fb_notify);
-	#else
-	fb_register_client(&chip->fb_notify);
-	#endif
 
 	oneplus_motor_reset_check(g_the_chip);
 
