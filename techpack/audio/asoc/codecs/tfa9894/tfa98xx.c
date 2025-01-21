@@ -1912,10 +1912,6 @@ static void tfa98xx_add_widgets(struct tfa98xx *tfa98xx)
 	struct snd_soc_dapm_widget *widgets;
 	unsigned int num_dapm_widgets = ARRAY_SIZE(tfa98xx_dapm_widgets_common);
 
-//add by Multimedia,do not add the following non-used widgets to hold mic.
-    if(1)
-        return;
-
 	widgets = devm_kzalloc(&tfa98xx->i2c->dev,
 			sizeof(struct snd_soc_dapm_widget) *
 				ARRAY_SIZE(tfa98xx_dapm_widgets_common),
@@ -3149,7 +3145,10 @@ static int tfa98xx_probe(struct snd_soc_component *component)
 	ret = tfa98xx_load_container(tfa98xx);
 	pr_info("Container loading requested: %d\n", ret);
 
-	tfa98xx_add_widgets(tfa98xx);
+
+//add by Multimedia,do not add the following non-used widgets to hold mic.
+    if (0)
+		tfa98xx_add_widgets(tfa98xx);
 
 	dev_info(component->dev, "tfa98xx codec registered (%s)",
 							tfa98xx->fw.name);
