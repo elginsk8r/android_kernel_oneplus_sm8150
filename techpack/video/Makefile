@@ -27,4 +27,13 @@ ifeq ($(CONFIG_ARCH_BENGAL), y)
 LINUXINCLUDE    += -include $(srctree)/techpack/video/config/bengalvidconf.h
 endif
 
+# auto-detect subdirs
+ifeq ($(CONFIG_ARCH_SM8150), y)
+include $(srctree)/techpack/video/config/sm8150vid.conf
+endif
+
+ifeq ($(CONFIG_ARCH_SM8150), y)
+LINUXINCLUDE    += -include $(srctree)/techpack/video/config/sm8150vidconf.h
+endif
+
 obj-y +=msm/
