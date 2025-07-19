@@ -139,3 +139,9 @@ kernel/configs/android-*.cfg
 #Ignoring Android.bp link file
 #
 Android.bp
+
+*.sh
+out/
+pstore/
+arch/arm64/boot/dts/qcom-sm8150/
+arch/arm64/boot/dts/xiaomi/
